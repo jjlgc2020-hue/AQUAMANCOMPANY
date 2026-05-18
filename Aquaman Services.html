@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Aquaman Services — Premium Mobile Detailing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #0B1A2E;
+    --ink-2: #0F2540;
+    --ink-3: #15315A;
+    --blue: #1E5BC6;
+    --blue-bright: #2F7BFF;
+    --blue-soft: #5C8CE0;
+    --line: #DDE3EC;
+    --paper: #EEF1F4;
+    --paper-2: #F6F8FA;
+    --white: #FFFFFF;
+    --text: #0B1A2E;
+    --muted: #5B6B82;
+    --shadow-sm: 0 1px 2px rgba(11,26,46,.06), 0 2px 8px rgba(11,26,46,.04);
+    --shadow-md: 0 10px 30px rgba(11,26,46,.08), 0 2px 6px rgba(11,26,46,.05);
+    --shadow-lg: 0 30px 60px rgba(11,26,46,.18), 0 8px 20px rgba(11,26,46,.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: var(--text);
+    background: var(--paper-2);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4, .display, .eyebrow {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    letter-spacing: -0.02em;
+  }
+  .display { font-weight: 800; line-height: 0.98; letter-spacing: -0.035em; }
+  .eyebrow {
+    font-weight: 700; font-size: 12px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--blue);
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; }
+  img { display: block; max-width: 100%; }
+  .container { max-width: 1280px; margin: 0 auto; padding: 0 28px; }
+  @media (max-width: 720px) { .container { padding: 0 18px; } }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 24px; font-weight: 600; font-size: 14px;
+    letter-spacing: -0.005em;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: transform .15s ease, box-shadow .2s ease, background .2s ease, opacity .2s ease;
+    border-radius: 999px;
+  }
+  .btn-primary { background: #000; color: var(--white); padding-left: 28px; padding-right: 28px; }
+  .btn-primary:hover { background: #1a1a1a; transform: translateY(-1px); }
+  .btn-ghost { background: rgba(255,255,255,.1); color: var(--white); border: 1px solid rgba(255,255,255,.22); padding-left: 28px; padding-right: 28px; backdrop-filter: blur(10px); }
+  .btn-ghost:hover { background: rgba(255,255,255,.18); }
+  .btn-dark { background: var(--ink); color: var(--white); padding-left: 28px; padding-right: 28px; }
+  .btn-dark:hover { background: var(--ink-3); }
+
+  /* Hex background pattern (inline as encoded SVG) */
+  .hex-bg {
+    background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='49' viewBox='0 0 56 49'%3E%3Cpath fill='none' stroke='%231E5BC6' stroke-opacity='.18' stroke-width='1' d='M14 0 L42 0 L56 24.5 L42 49 L14 49 L0 24.5 Z'/%3E%3C/svg%3E");
+    background-size: 56px 49px;
+  }
+  .hex-bg-dark {
+    background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='49' viewBox='0 0 56 49'%3E%3Cpath fill='none' stroke='%232F7BFF' stroke-opacity='.10' stroke-width='1' d='M14 0 L42 0 L56 24.5 L42 49 L14 49 L0 24.5 Z'/%3E%3C/svg%3E");
+    background-size: 56px 49px;
+  }
+
+  /* Diagonal section divider */
+  .skew-top { clip-path: polygon(0 36px, 100% 0, 100% 100%, 0 100%); }
+  .skew-bottom { clip-path: polygon(0 0, 100% 0, 100% calc(100% - 36px), 0 100%); }
+
+  /* Animations */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  .fadeup { animation: fadeUp .8s ease both; }
+  @keyframes drift { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+  /* Service icon hexagon */
+  .hex {
+    width: 64px; height: 56px;
+    background: var(--white);
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    display: grid; place-items: center;
+    position: relative;
+  }
+  .hex::before {
+    content: ''; position: absolute; inset: 2px;
+    background: var(--white);
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    z-index: 0;
+  }
+  .hex > * { position: relative; z-index: 1; }
+  .hex-outline {
+    background: var(--blue);
+  }
+  .hex-outline::before {
+    background: var(--paper-2);
+  }
+
+  /* Floating call (mobile) */
+  .fab-call {
+    position: fixed; right: 20px; bottom: 20px; z-index: 80;
+    background: var(--blue); color: white;
+    width: 60px; height: 60px; border-radius: 50%;
+    display: grid; place-items: center;
+    box-shadow: 0 10px 30px rgba(30,91,198,.45);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(30,91,198,.5); }
+    70% { box-shadow: 0 0 0 18px rgba(30,91,198,0); }
+    100% { box-shadow: 0 0 0 0 rgba(30,91,198,0); }
+  }
+
+  /* Image placeholder (slot) */
+  .slot {
+    background:
+      repeating-linear-gradient(135deg, rgba(11,26,46,.06) 0 12px, rgba(11,26,46,.03) 12px 24px),
+      var(--paper);
+    border: 1px dashed rgba(11,26,46,.18);
+    display: grid; place-items: center;
+    color: var(--muted); font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+    text-align: center; padding: 24px;
+  }
+  .slot-dark {
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,.06) 0 12px, rgba(255,255,255,.03) 12px 24px),
+      rgba(255,255,255,.04);
+    border-color: rgba(255,255,255,.2);
+    color: rgba(255,255,255,.55);
+  }
+
+  /* Form */
+  .field {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .field label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.14em; color: var(--muted);
+  }
+  .field input, .field select, .field textarea {
+    font-family: inherit; font-size: 15px; color: var(--text);
+    padding: 14px 16px; border: 1px solid var(--line);
+    background: var(--white); border-radius: 4px;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline: none; border-color: var(--blue);
+    box-shadow: 0 0 0 4px rgba(30,91,198,.12);
+  }
+
+  /* Booking modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(11,26,46,.72);
+    backdrop-filter: blur(6px); z-index: 100;
+    display: grid; place-items: center; padding: 20px;
+    animation: fadeIn .2s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--white); width: 100%; max-width: 640px;
+    border-radius: 8px; box-shadow: var(--shadow-lg);
+    overflow: hidden; animation: modalIn .3s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes modalIn { from { transform: translateY(20px) scale(.98); opacity: 0; } to { transform: none; opacity: 1; } }
+
+  /* Marquee */
+  .marquee { overflow: hidden; }
+  .marquee-track { display: flex; gap: 60px; animation: scroll 30s linear infinite; white-space: nowrap; }
+  @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="components.jsx"></script>
+<script type="text/babel" src="sections.jsx"></script>
+<script type="text/babel" src="booking.jsx"></script>
+<script type="text/babel" src="app.jsx"></script>
+</body>
+</html>
