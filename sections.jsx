@@ -26,7 +26,7 @@ const CircularLogo = () =>
     flexShrink: 0
   }}>
       <img
-      src="images/aquaman-logo.svg"
+      src="aquaman-logo.svg"
       alt="Aquaman"
       style={{ width: 32, height: 32, display: 'block', filter: 'brightness(0) invert(1)' }} />
     
@@ -176,8 +176,8 @@ const Nav = ({ onBook }) => {
 
 /* ─────────── HERO ─────────── */
 // 🎬 Para cambiar el video de fondo, reemplaza este URL con tu propio archivo .mp4
-// Puede ser una URL externa o un archivo en este proyecto (ej. "videos/hero.mp4")
-const HERO_VIDEO_SRC = 'videos/hero.mp4';
+// Puede ser una URL externa o un archivo en este proyecto (ej. "hero.mp4")
+const HERO_VIDEO_SRC = 'hero.mp4';
 const HERO_VIDEO_POSTER = ''; // opcional: imagen de respaldo mientras carga
 
 const Hero = ({ onBook }) =>
@@ -805,7 +805,7 @@ const Process = () => {
       {/* Full-bleed background image */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 0,
-        backgroundImage: 'url(images/raptor.jpg)',
+        backgroundImage: 'url(raptor.jpg)',
         backgroundSize: 'contain',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
@@ -883,14 +883,14 @@ const Process = () => {
 
 /* ─────────── ENHANCEMENT SERVICES ─────────── */
 const enhancements = [
-{ name: 'Interior Detail', desc: 'Full cabin refresh', video: 'videos/enh-interior.mp4' },
-{ name: 'Paint Correction', desc: 'Swirl & scratch removal', video: 'videos/enh-paint.mp4' },
-{ name: 'Headlight Restoration', desc: 'Clear hazy lenses', video: 'videos/enh-headlight.mp4' },
-{ name: 'Rim Polishing', desc: 'Pulido de rines', video: 'videos/enh-rim.mp4' },
-{ name: 'Leather Seat Cleaning', desc: 'Limpieza de cuero', video: 'videos/enh-leather.mp4' },
-{ name: 'Pet Hair Removal', desc: 'Limpieza de pelos', video: 'videos/enh-pet.mp4' },
-{ name: 'Glass Coating', desc: 'Hydrophobic windows', video: 'videos/enh-glass.mp4' },
-{ name: 'Engine Bay Wash', desc: 'Steam degrease & detail', video: 'videos/enh-engine.mp4' }];
+{ name: 'Interior Detail', desc: 'Full cabin refresh', video: 'enh-interior.mp4' },
+{ name: 'Paint Correction', desc: 'Swirl & scratch removal', video: 'enh-paint.mp4' },
+{ name: 'Headlight Restoration', desc: 'Clear hazy lenses', video: 'enh-headlight.mp4' },
+{ name: 'Rim Polishing', desc: 'Pulido de rines', video: 'enh-rim.mp4' },
+{ name: 'Leather Seat Cleaning', desc: 'Limpieza de cuero', video: 'enh-leather.mp4' },
+{ name: 'Pet Hair Removal', desc: 'Limpieza de pelos', video: 'enh-pet.mp4' },
+{ name: 'Glass Coating', desc: 'Hydrophobic windows', video: 'enh-glass.mp4' },
+{ name: 'Engine Bay Wash', desc: 'Steam degrease & detail', video: 'enh-engine.mp4' }];
 
 
 const Enhancements = () =>
@@ -1248,13 +1248,13 @@ const FeaturedEnhancementCard = ({ e }) => {
 
 /* ─────────── REEL (vertical video gallery, hover to play) ─────────── */
 const reelClips = [
-{ src: 'videos/clip-1.mp4' },
-{ src: 'videos/clip-2.mp4' },
-{ src: 'videos/clip-3.mp4' },
-{ src: 'videos/clip-4.mp4' },
-{ src: 'videos/clip-5.mp4' },
-{ src: 'videos/clip-6.mp4' },
-{ src: 'videos/clip-7.mp4' }];
+{ src: 'clip-1.mp4' },
+{ src: 'clip-2.mp4' },
+{ src: 'clip-3.mp4' },
+{ src: 'clip-4.mp4' },
+{ src: 'clip-5.mp4' },
+{ src: 'clip-6.mp4' },
+{ src: 'clip-7.mp4' }];
 
 
 const ReelCard = ({ clip, index }) => {
@@ -2105,7 +2105,7 @@ const Outro = ({ onBook }) => {
           filter: 'brightness(0.7) contrast(1.15) saturate(0.95)'
         }}>
         
-        <source src="videos/outro.mp4" type="video/mp4" />
+        <source src="outro.mp4" type="video/mp4" />
       </video>
 
       {/* Cinematic overlay */}
@@ -2167,7 +2167,7 @@ const Outro = ({ onBook }) => {
             flexShrink: 0
           }}>
             <img
-              src="images/aquaman-logo.svg"
+              src="aquaman-logo.svg"
               alt="Aquaman"
               style={{
                 width: '66%',
@@ -2248,7 +2248,7 @@ const Footer = () =>
             flexShrink: 0
           }}>
               <img
-              src="images/aquaman-logo.svg"
+              src="aquaman-logo.svg"
               alt="Aquaman"
               style={{ width: 38, height: 38, filter: 'brightness(0) invert(1)' }} />
             
