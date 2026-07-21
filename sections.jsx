@@ -2364,6 +2364,7 @@ const QuoteForm = ({ onBook }) => {
       _subject: 'New quote request - ' + data.name.trim(),
       _template: 'table',
       _captcha: 'false',
+      _cc: 'Juanespina4@gmail.com',
       Name: data.name.trim(),
       Phone: formatPhone(data.phone),
       Vehicle: data.vehicleType,
