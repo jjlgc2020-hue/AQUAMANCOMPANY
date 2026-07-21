@@ -2764,18 +2764,14 @@ const QuoteForm = ({ onBook }) => {
           </div>}
       </div>
 
-      {/* Footer: back + full booking */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 18 }}>
-        {step > 0 ?
-        <button type="button" className="qw-back" onClick={back}>
+      {/* Footer: back */}
+      {step > 0 &&
+      <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginTop: 18 }}>
+          <button type="button" className="qw-back" onClick={back}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18 L9 12 L15 6" /></svg>
             Back
-          </button> :
-        <span />}
-        <button type="button" className="qw-back" onClick={onBook}>
-          Prefer the full booking form?
-        </button>
-      </div>
+          </button>
+        </div>}
     </div>);
 
 };
