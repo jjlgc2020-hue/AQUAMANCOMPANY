@@ -2385,31 +2385,47 @@ const QuoteForm = ({ onBook }) => {
   const send = async () => {
     setStatus('sending');
     const url = 'https://formsubmit.co/ajax/' + FORMSUBMIT_KEY;
-    try {
-      let res;
-      if (data.photos.length > 0) {
+
+    // FormSubmit occasionally returns a transient 500; retry a couple of times.
+    const postWithRetry = async (init, tries) => {
+      for (let i = 0; i < tries; i++) {
         try {
-          const fd = new FormData();
-          Object.entries(leadFields()).forEach(([k, v]) => fd.append(k, v));
-          data.photos.forEach((p, i) => fd.append('attachment' + (i + 1), p.blob, p.name));
-          res = await fetch(url, { method: 'POST', headers: { Accept: 'application/json' }, body: fd });
-        } catch (err) {
-          res = null; // photo upload failed mid-flight; fall through to the JSON submission
-        }
+          const r = await fetch(url, init);
+          if (r.ok) return r;
+        } catch (err) {/* network hiccup — retry */}
+        await new Promise((r) => setTimeout(r, 700 * (i + 1)));
       }
-      if (!res || !res.ok) {
-        res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-          body: JSON.stringify({
-            ...leadFields(),
-            Photos: data.photos.length > 0 ?
-            data.photos.length + ' photo(s) taken, attachment upload failed' :
-            'None'
-          })
-        });
+      return null;
+    };
+
+    const jsonInit = (extra) => ({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ ...leadFields(), ...extra })
+    });
+
+    try {
+      let res = null;
+
+      // 1) Try to send with the photos attached (best effort).
+      if (data.photos.length > 0) {
+        const fd = new FormData();
+        Object.entries(leadFields()).forEach(([k, v]) => fd.append(k, v));
+        // FormSubmit expects the file field named "attachment".
+        data.photos.forEach((p) => fd.append('attachment', p.blob, p.name));
+        res = await postWithRetry({ method: 'POST', headers: { Accept: 'application/json' }, body: fd }, 2);
       }
-      if (!res.ok) throw new Error('send failed');
+
+      // 2) If there were no photos, or the attachment upload failed, deliver the
+      //    lead as JSON so the request is never lost.
+      if (!res) {
+        res = await postWithRetry(
+          jsonInit({ Photos: data.photos.length > 0 ?
+          data.photos.length + ' photo(s) — ask the customer to text them' : 'None' }),
+          3);
+      }
+
+      if (!res) throw new Error('send failed');
       setStatus('sent');
     } catch (err) {
       setStatus('error');
