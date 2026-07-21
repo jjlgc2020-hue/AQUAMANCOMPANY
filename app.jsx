@@ -32,6 +32,7 @@ const App = () => {
       <Process />
       <Enhancements />
       <Reel />
+      <Gallery />
       <Stats />
       <Reviews />
       <Contact onBook={openBooking} />

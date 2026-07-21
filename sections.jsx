@@ -8,6 +8,8 @@ const FB = 'Aquaman Services';
 const FB_HREF = 'https://www.facebook.com/share/1SXb4mEzVP/?mibextid=wwXIfr';
 const EMAIL = 'Aquamancarwash2024@gmail.com';
 const EMAIL_HREF = 'mailto:Aquamancarwash2024@gmail.com';
+// FormSubmit alias for EMAIL — keeps the raw address out of the endpoint (anti-spam)
+const FORMSUBMIT_KEY = 'aeb0557bbd82ddc45043c725038993f6';
 
 /* ─────────── NAV ─────────── */
 
@@ -1535,7 +1537,7 @@ const Stats = () => {
 };
 
 /* ─────────── GALLERY (before/after) ─────────── */
-const BeforeAfter = ({ label }) => {
+const BeforeAfter = ({ label, before, after }) => {
   const [pos, setPos] = React.useState(50);
   const ref = React.useRef();
   const dragging = React.useRef(false);
@@ -1559,19 +1561,17 @@ const BeforeAfter = ({ label }) => {
       onTouchMove={(e) => handleMove(e.touches[0].clientX)}>
       
       {/* "After" image (full) */}
-      <div className="slot" style={{ position: 'absolute', inset: 0, background:
-        'linear-gradient(135deg, #1E5BC6 0%, #15315A 100%)', color: 'rgba(255,255,255,.8)' }}>
-        [ AFTER · {label} ]
-      </div>
+      <img src={after} alt={'After - ' + label} draggable="false" style={{
+        position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover'
+      }} />
       {/* "Before" image (clipped) */}
       <div style={{
         position: 'absolute', inset: 0,
         clipPath: `polygon(0 0, ${pos}% 0, ${pos}% 100%, 0 100%)`
       }}>
-        <div className="slot" style={{ position: 'absolute', inset: 0, background:
-          'linear-gradient(135deg, #5B6B82 0%, #2A3744 100%)', color: 'rgba(255,255,255,.7)' }}>
-          [ BEFORE · {label} ]
-        </div>
+        <img src={before} alt={'Before - ' + label} draggable="false" style={{
+          position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover'
+        }} />
       </div>
       {/* Divider handle */}
       <div style={{
@@ -1610,38 +1610,35 @@ const BeforeAfter = ({ label }) => {
 };
 
 const Gallery = () =>
-<section id="gallery" style={{ padding: '120px 0', background: 'var(--paper-2)' }}>
+<section id="gallery" style={{ padding: '80px 0', background: 'var(--paper-2)' }}>
     <div className="container">
       <Reveal>
-        <SectionTitle
-        eyebrow="The transformation"
-        title="See the difference. Drag the slider."
-        subtitle="Real results from real customers. Every detail is photographed before and after — no filters, no tricks."
-        align="center" />
-      
-      </Reveal>
-      <div style={{
-      display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24
-    }} className="gallery-grid">
-        <Reveal><BeforeAfter label="Exterior · Full Detail" /></Reveal>
-        <Reveal delay={0.1}><BeforeAfter label="Interior · Deep Clean" /></Reveal>
-      </div>
-      <Reveal delay={0.2}>
-        <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }} className="gallery-thumbs">
-          {['Wheels', 'Seats', 'Engine bay', 'Paint correction'].map((l, i) =>
-        <div key={l} className="slot" style={{ aspectRatio: '1/1' }}>
-              [ {l} ]
-            </div>
-        )}
+        <div style={{
+        position: 'relative', overflow: 'hidden',
+        borderRadius: 4, aspectRatio: '21/9', minHeight: 260
+      }}>
+          <video src="home-comfort.mp4" autoPlay muted loop playsInline style={{
+          position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover'
+        }} />
+          <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(90deg, rgba(11,26,46,.85) 0%, rgba(11,26,46,.5) 55%, rgba(11,26,46,.15) 100%)'
+        }} />
+          <div style={{
+          position: 'absolute', left: 'clamp(20px, 5%, 48px)', top: '50%',
+          transform: 'translateY(-50%)', color: 'white', maxWidth: 480
+        }}>
+            <div className="eyebrow" style={{ color: '#5C8CE0', marginBottom: 8 }}>We come to you</div>
+            <h3 className="display" style={{ fontSize: 'clamp(24px, 3.4vw, 40px)', margin: '0 0 10px', color: 'white' }}>
+              From the comfort of your home.
+            </h3>
+            <p style={{ margin: 0, fontSize: 15, color: 'rgba(255,255,255,.85)' }}>
+              You hand us the keys. We handle the rest — right in your driveway.
+            </p>
+          </div>
         </div>
       </Reveal>
     </div>
-    <style>{`
-      @media (max-width: 900px) {
-        .gallery-grid { grid-template-columns: 1fr !important; }
-        .gallery-thumbs { grid-template-columns: repeat(2, 1fr) !important; }
-      }
-    `}</style>
   </section>;
 
 
@@ -1775,7 +1772,7 @@ const Reviews = () =>
         <SectionTitle
         eyebrow="The reviews"
         title="What folks are saying."
-        subtitle="Real reviews from Memphis-area customers. Pulled straight from Google and Instagram DMs."
+        subtitle="Memphis drivers who got the full detail without ever leaving home."
         align="center" />
       
       </Reveal>
@@ -1988,18 +1985,531 @@ const Contact = ({ onBook }) =>
   </section>;
 
 
-const QuoteForm = ({ onBook }) => {
-  const [data, setData] = React.useState({ name: '', phone: '', vehicle: '', service: 'Exterior Car Cleaning' });
-  const [sent, setSent] = React.useState(false);
-  const set = (k, v) => setData((d) => ({ ...d, [k]: v }));
-  const submit = (e) => {
-    e.preventDefault();
-    setSent(true);
-    setTimeout(() => setSent(false), 4000);
+/* Quote wizard — one question per screen, leads are emailed via FormSubmit */
+
+const VehicleGlyph = {
+  Sedan: () => (
+    <svg width="46" height="22" viewBox="0 0 48 21" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 16 L4 12 Q5 10.5 7 10.5 L14 10.5 L18 6.5 Q19 5.5 21 5.5 L29 5.5 Q31 5.5 32.5 7 L36 10.5 L42 11.5 Q45 12 45 14 L45 16" />
+      <circle cx="12" cy="16" r="3.1" /><circle cx="35" cy="16" r="3.1" />
+    </svg>),
+  SUV: () => (
+    <svg width="46" height="22" viewBox="0 0 48 21" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 16 L4 8 Q4 5 8 5 L30 5 Q33 5 35 7.5 L38.5 12 L43 12 Q45 12 45 14 L45 16" />
+      <circle cx="12" cy="16" r="3.3" /><circle cx="35" cy="16" r="3.3" />
+    </svg>),
+  Pickup: () => (
+    <svg width="46" height="22" viewBox="0 0 48 21" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 16 L3 9 L17 9 L20 5 L28 5 Q30 5 31 7 L33 10 L44 10 Q45 10 45 12 L45 16" />
+      <circle cx="11" cy="16" r="3.1" /><circle cx="36" cy="16" r="3.1" />
+    </svg>),
+  Van: () => (
+    <svg width="46" height="22" viewBox="0 0 48 21" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 16 L4 7 Q4 5 7 5 L35 5 Q38 5 40 8 L44 12 L44 16" />
+      <circle cx="12" cy="16" r="3.1" /><circle cx="35" cy="16" r="3.1" />
+    </svg>),
+  Coupe: () => (
+    <svg width="46" height="22" viewBox="0 0 48 21" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 15.5 L10 11 Q16 6.5 23 6.5 Q31 6.5 37 10.5 L45 13 L45 15.5" />
+      <circle cx="12" cy="15.5" r="3" /><circle cx="34" cy="15.5" r="3" />
+    </svg>),
+  Other: () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M7 2 L17 2 L22 12 L17 22 L7 22 L2 12 Z" />
+      <path d="M9.6 9.5 Q9.6 7 12 7 Q14.4 7 14.4 9.2 Q14.4 11 12 12 L12 13.5" /><circle cx="12" cy="17" r=".4" fill="currentColor" />
+    </svg>)
+};
+
+const VEHICLE_TYPES = [
+  { label: 'Sedan', glyph: 'Sedan' },
+  { label: 'SUV', glyph: 'SUV' },
+  { label: 'Pickup truck', glyph: 'Pickup' },
+  { label: 'Van / Minivan', glyph: 'Van' },
+  { label: 'Coupe / Sports', glyph: 'Coupe' },
+  { label: 'Other', glyph: 'Other' }];
+
+const QUOTE_STEPS = ['Vehicle', 'Services', 'Condition', 'Photos', 'Days', 'Time', 'Address', 'Contact', 'Review'];
+
+const TIME_SLOTS = [
+'Morning · 8–11 AM',
+'Midday · 11 AM–2 PM',
+'Afternoon · 2–5 PM',
+'Evening · 5–7 PM',
+'Any time'];
+
+const dirtLabel = (n) =>
+n <= 3 ? 'Lightly dirty' : n <= 6 ? 'Moderate' : n <= 8 ? 'Very dirty' : 'Extremely dirty';
+
+const NAME_RE = /^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'’ -]{1,59}$/;
+const EMAIL_RE = /^\S+@\S+\.\S+$/;
+const phoneDigits = (v) => v.replace(/\D/g, '');
+const formatPhone = (v) => {
+  let raw = phoneDigits(v);
+  if (raw.length === 11 && raw[0] === '1') raw = raw.slice(1);
+  const d = raw.slice(0, 10);
+  if (d.length < 4) return d;
+  if (d.length < 7) return '(' + d.slice(0, 3) + ') ' + d.slice(3);
+  return '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6);
+};
+
+const shrinkPhoto = (file) => new Promise((resolve) => {
+  const img = new Image();
+  img.onload = () => {
+    const max = 1600;
+    const scale = Math.min(1, max / Math.max(img.width, img.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(img.width * scale);
+    canvas.height = Math.round(img.height * scale);
+    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+    URL.revokeObjectURL(img.src);
+    canvas.toBlob((blob) => resolve(blob || file), 'image/jpeg', 0.8);
   };
-  if (sent) {
+  img.onerror = () => {
+    URL.revokeObjectURL(img.src);
+    resolve(file);
+  };
+  img.src = URL.createObjectURL(file);
+});
+
+const CAL_DOW = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+const fmtDay = (d) => d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+const CAR_MAKES = [
+'Acura', 'Audi', 'BMW', 'Buick', 'Cadillac', 'Chevrolet', 'Chrysler', 'Dodge',
+'Ford', 'GMC', 'Honda', 'Hyundai', 'Infiniti', 'Jeep', 'Kia', 'Lexus',
+'Lincoln', 'Mazda', 'Mercedes-Benz', 'Mitsubishi', 'Nissan', 'Ram', 'Subaru',
+'Tesla', 'Toyota', 'Volkswagen', 'Volvo'];
+
+const CarSearch = ({ value, onChange, onSelect }) => {
+  const [modelCache, setModelCache] = React.useState({});
+  const [sug, setSug] = React.useState([]);
+  const timer = React.useRef(null);
+
+  const suggest = (q, cache) => {
+    if (timer.current) clearTimeout(timer.current);
+    const text = q.trim();
+    if (text.length < 2) {
+      setSug([]);
+      return;
+    }
+    const lower = text.toLowerCase();
+    const make = CAR_MAKES.find((m) =>
+    lower === m.toLowerCase() || lower.startsWith(m.toLowerCase() + ' '));
+    if (!make) {
+      setSug(CAR_MAKES.
+      filter((m) => m.toLowerCase().startsWith(lower)).
+      slice(0, 6).map((m) => ({ label: m, isMake: true })));
+      return;
+    }
+    const rest = text.slice(make.length).trim().toLowerCase();
+    const models = (cache || modelCache)[make];
+    if (models) {
+      setSug(models.
+      filter((mo) => !rest || mo.toLowerCase().includes(rest)).
+      slice(0, 6).map((mo) => ({ label: make + ' ' + mo })));
+      return;
+    }
+    timer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          'https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMake/' +
+          encodeURIComponent(make) + '?format=json');
+        const json = await res.json();
+        const list = [...new Set((json.Results || []).map((r) => r.Model_Name))].
+        filter((mo) => mo && mo.length >= 2 && (mo !== mo.toUpperCase() || /[0-9-]/.test(mo))).
+        sort();
+        setModelCache((m) => ({ ...m, [make]: list }));
+        setSug(list.
+        filter((mo) => !rest || mo.toLowerCase().includes(rest)).
+        slice(0, 6).map((mo) => ({ label: make + ' ' + mo })));
+      } catch (err) {
+        setSug([]);
+      }
+    }, 250);
+  };
+
+  return (
+    <div>
+      <div className="field">
+        <label>Make & model</label>
+        <input required autoFocus value={value} autoComplete="off"
+        onChange={(e) => {onChange(e.target.value);suggest(e.target.value);}}
+        placeholder="e.g., GMC Sierra" />
+      </div>
+      {sug.length > 0 &&
+      <div className="qw-sug">
+          {sug.map((s) =>
+        <button key={s.label} type="button" className="qw-sug-item"
+        onClick={() => {
+          if (s.isMake) {
+            onChange(s.label + ' ');
+            suggest(s.label + ' ');
+          } else {
+            setSug([]);
+            onSelect(s.label);
+          }
+        }}>
+              <span>{s.label}{s.isMake ? ' …' : ''}</span>
+            </button>
+        )}
+        </div>}
+    </div>);
+};
+
+const QuoteCalendar = ({ selected, onToggle }) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const [month, setMonth] = React.useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  const maxDate = new Date(today);
+  maxDate.setDate(maxDate.getDate() + 60);
+
+  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < month.getDay(); i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(month.getFullYear(), month.getMonth(), d));
+
+  const canPrev = month > today;
+  const canNext = new Date(month.getFullYear(), month.getMonth() + 1, 1) <= maxDate;
+  const monthLabel = month.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  return (
+    <div className="qw-cal">
+      <div className="qw-cal-head">
+        <button type="button" className="qw-cal-nav" disabled={!canPrev}
+        onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18 L9 12 L15 6" /></svg>
+        </button>
+        <div style={{ fontWeight: 800, fontSize: 15 }}>{monthLabel}</div>
+        <button type="button" className="qw-cal-nav" disabled={!canNext}
+        onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18 L15 12 L9 6" /></svg>
+        </button>
+      </div>
+      <div className="qw-cal-grid" style={{ marginBottom: 4 }}>
+        {CAL_DOW.map((d, i) => <div key={i} className="mono qw-cal-dow">{d}</div>)}
+      </div>
+      <div className="qw-cal-grid">
+        {cells.map((d, i) => {
+          if (!d) return <div key={i} />;
+          const off = d < today || d > maxDate;
+          const sel = selected.includes(fmtDay(d));
+          return (
+            <button key={i} type="button" disabled={off}
+            className={'qw-cal-day' + (sel ? ' sel' : '') + (off ? ' off' : '')}
+            onClick={() => onToggle(fmtDay(d))}>
+              {d.getDate()}
+            </button>);
+        })}
+      </div>
+    </div>);
+};
+
+const AddressField = ({ value, onChange, onSelect }) => {
+  const [sug, setSug] = React.useState([]);
+  const timer = React.useRef(null);
+
+  const query = (q) => {
+    if (timer.current) clearTimeout(timer.current);
+    if (q.trim().length < 3) {
+      setSug([]);
+      return;
+    }
+    timer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          'https://photon.komoot.io/api/?q=' + encodeURIComponent(q) +
+          '&limit=5&lang=en&lat=35.1495&lon=-90.049');
+        const json = await res.json();
+        const seen = new Set();
+        const items = (json.features || []).map((f) => {
+          const p = f.properties || {};
+          const street = p.street ? (p.housenumber ? p.housenumber + ' ' : '') + p.street : '';
+          return [p.name || street, p.city || p.district || '', p.state || '', p.postcode || ''].
+          filter(Boolean).join(', ');
+        }).filter((l) => l && !seen.has(l) && seen.add(l));
+        setSug(items);
+      } catch (err) {
+        setSug([]);
+      }
+    }, 250);
+  };
+
+  return (
+    <div>
+      <div className="field">
+        <label>Service address</label>
+        <input required autoFocus value={value} autoComplete="off"
+        onChange={(e) => {onChange(e.target.value);query(e.target.value);}}
+        placeholder="123 Main St, Memphis" />
+      </div>
+      {sug.length > 0 &&
+      <div className="qw-sug">
+          {sug.map((s) =>
+        <button key={s} type="button" className="qw-sug-item"
+        onClick={() => {setSug([]);onSelect(s);}}>
+              <Icon.Pin />
+              <span>{s}</span>
+            </button>
+        )}
+        </div>}
+    </div>);
+};
+
+const QuoteForm = ({ onBook }) => {
+  const [step, setStep] = React.useState(0);
+  const [data, setData] = React.useState({
+    vehicleType: '', services: [], serviceOther: '', dirt: 0, petHair: '',
+    photos: [], dates: [], timeSlot: '', area: '', name: '', phone: '', email: ''
+  });
+  const [errors, setErrors] = React.useState({});
+  const [reviewReturn, setReviewReturn] = React.useState(false);
+  const [status, setStatus] = React.useState('idle'); // idle | sending | sent | error
+  const set = (k, v) => setData((d) => ({ ...d, [k]: v }));
+  const next = () => {
+    if (reviewReturn) {
+      setReviewReturn(false);
+      setStep(QUOTE_STEPS.length - 1);
+      return;
+    }
+    setStep((s) => Math.min(s + 1, QUOTE_STEPS.length - 1));
+  };
+  const back = () => setStep((s) => Math.max(0, s - 1));
+  const editStep = (i) => {
+    setReviewReturn(true);
+    setStep(i);
+  };
+  const pick = (k, v) => {
+    set(k, v);
+    setTimeout(next, 160);
+  };
+
+  const toggleService = (title) => {
+    setData((d) => {
+      const on = d.services.includes(title);
+      return { ...d, services: on ? d.services.filter((s) => s !== title) : [...d.services, title] };
+    });
+  };
+
+  const pickCondition = (k, v) => {
+    const merged = { ...data, [k]: v };
+    setData(merged);
+    if (merged.dirt && merged.petHair) setTimeout(next, 200);
+  };
+
+  const addPhotos = async (files) => {
+    const room = 3 - data.photos.length;
+    const list = [...files].slice(0, Math.max(0, room));
+    if (!list.length) return;
+    const shrunk = await Promise.all(list.map(shrinkPhoto));
+    setData((d) => ({
+      ...d,
+      photos: [...d.photos, ...shrunk.map((blob, i) => ({
+        blob,
+        name: (list[i].name || 'photo').replace(/\.[^.]+$/, '') + '.jpg',
+        url: URL.createObjectURL(blob)
+      }))].slice(0, 3)
+    }));
+  };
+
+  const removePhoto = (url) => {
+    URL.revokeObjectURL(url);
+    setData((d) => ({ ...d, photos: d.photos.filter((p) => p.url !== url) }));
+  };
+
+  const validateContact = () => {
+    const errs = {};
+    if (!NAME_RE.test(data.name.trim())) errs.name = 'Enter your name (letters only).';
+    if (phoneDigits(data.phone).length !== 10) errs.phone = 'Enter a valid 10-digit phone number.';
+    if (data.email.trim() && !EMAIL_RE.test(data.email.trim())) errs.email = 'Enter a valid email, or leave it empty.';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const serviceList = () => {
+    const list = data.services.filter((s) => s !== 'Other');
+    if (data.services.includes('Other')) {
+      list.push(data.serviceOther.trim() ? 'Other: ' + data.serviceOther.trim() : 'Other');
+    }
+    return list;
+  };
+
+  const conditionText = () =>
+  data.dirt + '/10 (' + dirtLabel(data.dirt) + ')' + (data.petHair === 'Yes' ? ' + pet hair' : '');
+
+  const leadFields = () => {
+    const fields = {
+      _subject: 'New quote request - ' + data.name.trim(),
+      _template: 'table',
+      _captcha: 'false',
+      Name: data.name.trim(),
+      Phone: formatPhone(data.phone),
+      Vehicle: data.vehicleType,
+      Services: serviceList().join(', '),
+      Condition: conditionText(),
+      Days: data.dates.join(' / '),
+      Time: data.timeSlot,
+      Location: data.area
+    };
+    if (data.email.trim()) {
+      fields.email = data.email.trim(); // reply-to for the lead email
+    } else {
+      fields.Email = 'Not provided';
+    }
+    return fields;
+  };
+
+  const send = async () => {
+    setStatus('sending');
+    const url = 'https://formsubmit.co/ajax/' + FORMSUBMIT_KEY;
+    try {
+      let res;
+      if (data.photos.length > 0) {
+        try {
+          const fd = new FormData();
+          Object.entries(leadFields()).forEach(([k, v]) => fd.append(k, v));
+          data.photos.forEach((p, i) => fd.append('attachment' + (i + 1), p.blob, p.name));
+          res = await fetch(url, { method: 'POST', headers: { Accept: 'application/json' }, body: fd });
+        } catch (err) {
+          res = null; // photo upload failed mid-flight; fall through to the JSON submission
+        }
+      }
+      if (!res || !res.ok) {
+        res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({
+            ...leadFields(),
+            Photos: data.photos.length > 0 ?
+            data.photos.length + ' photo(s) taken, attachment upload failed' :
+            'None'
+          })
+        });
+      }
+      if (!res.ok) throw new Error('send failed');
+      setStatus('sent');
+    } catch (err) {
+      setStatus('error');
+    }
+  };
+
+  const reset = () => {
+    data.photos.forEach((p) => URL.revokeObjectURL(p.url));
+    setData({
+      vehicleType: '', services: [], serviceOther: '', dirt: 0, petHair: '',
+      photos: [], dates: [], timeSlot: '', area: '', name: '', phone: '', email: ''
+    });
+    setErrors({});
+    setReviewReturn(false);
+    setStatus('idle');
+    setStep(0);
+  };
+
+  const wizardCss = `
+    .qw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .qw-tile {
+      display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+      padding: 16px 14px; min-height: 64px;
+      border: 1px solid var(--line); background: var(--white);
+      font-family: inherit; font-weight: 700; font-size: 14px; color: var(--ink);
+      text-align: left; cursor: pointer;
+      clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+      transition: border-color .15s ease, background .15s ease, transform .1s ease;
+    }
+    .qw-tile:hover { border-color: var(--blue); }
+    .qw-tile:active { transform: scale(.98); }
+    .qw-tile.sel { border-color: var(--blue); background: rgba(30,91,198,.07); }
+    .qw-tile svg { color: var(--blue); }
+    .qw-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 700; color: #5B6B82;
+      padding: 4px 0; letter-spacing: .04em;
+    }
+    .qw-back:hover { color: var(--ink); }
+    .qw-cal { border: 1px solid var(--line); padding: 14px; background: var(--white); }
+    .qw-cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .qw-cal-nav {
+      width: 30px; height: 30px; display: grid; place-items: center;
+      border: 1px solid var(--line); border-radius: 4px; color: var(--ink);
+      transition: border-color .15s ease, opacity .15s ease;
+    }
+    .qw-cal-nav:hover:not(:disabled) { border-color: var(--blue); }
+    .qw-cal-nav:disabled { opacity: .3; cursor: default; }
+    .qw-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .qw-cal-dow { font-size: 10px; color: #5B6B82; text-align: center; letter-spacing: .1em; padding: 4px 0; }
+    .qw-cal-day {
+      height: 38px; display: grid; place-items: center;
+      font-family: inherit; font-weight: 600; font-size: 14px; color: var(--ink);
+      border: 1px solid transparent; border-radius: 4px; cursor: pointer;
+      transition: border-color .12s ease, background .12s ease;
+    }
+    .qw-cal-day:hover:not(.off) { border-color: var(--blue); }
+    .qw-cal-day.sel { background: var(--blue); color: var(--white); }
+    .qw-cal-day.off { color: #C4CCD8; cursor: default; }
+    .qw-sug { border: 1px solid var(--line); border-top: none; background: var(--white); }
+    .qw-sug-item {
+      display: flex; align-items: center; gap: 10px; width: 100%;
+      padding: 12px 14px; font-family: inherit; font-size: 14px; font-weight: 600;
+      color: var(--ink); text-align: left; cursor: pointer;
+      transition: background .12s ease;
+    }
+    .qw-sug-item:hover { background: var(--paper-2); }
+    .qw-sug-item svg { flex-shrink: 0; color: var(--blue); }
+    .qw-sug-item + .qw-sug-item { border-top: 1px solid var(--line); }
+    .qw-err { font-size: 12px; color: #C0392B; margin: 4px 0 0; }
+    .qw-mini-label {
+      font-size: 11px; font-weight: 700; letter-spacing: .14em;
+      text-transform: uppercase; color: #5B6B82; margin: 16px 0 8px;
+    }
+    .qw-photos { display: flex; gap: 10px; flex-wrap: wrap; }
+    .qw-thumb { position: relative; width: 84px; height: 84px; }
+    .qw-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .qw-thumb button {
+      position: absolute; top: -8px; right: -8px; width: 22px; height: 22px;
+      border-radius: 50%; background: var(--ink); color: var(--white);
+      font-size: 13px; line-height: 1; display: grid; place-items: center; cursor: pointer;
+    }
+    .qw-add {
+      width: 84px; height: 84px; border: 1px dashed var(--line);
+      display: grid; place-items: center; color: #5B6B82;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      transition: border-color .15s ease, color .15s ease;
+    }
+    .qw-add:hover { border-color: var(--blue); color: var(--blue); }
+    .qw-review { border: 1px solid var(--line); background: var(--white); }
+    .qw-review-row { display: flex; justify-content: space-between; gap: 16px; padding: 11px 14px; font-size: 14px; }
+    .qw-review-row + .qw-review-row { border-top: 1px solid var(--line); }
+    .qw-review-row .k {
+      color: #5B6B82; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .1em; flex-shrink: 0; padding-top: 2px;
+    }
+    .qw-review-row .v { font-weight: 700; text-align: right; }
+    button.qw-review-row {
+      width: 100%; background: var(--white); cursor: pointer;
+      align-items: center; font-family: inherit;
+      transition: background .12s ease;
+    }
+    button.qw-review-row:hover { background: var(--paper-2); }
+    .qw-review-row .e { color: #5B6B82; flex-shrink: 0; }
+    .qw-review-row .v { flex: 1; }
+    .qw-scale { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; }
+    .qw-scale-btn {
+      height: 44px; border: 1px solid var(--line); border-radius: 4px;
+      background: var(--white); font-family: inherit; font-weight: 700;
+      font-size: 13px; color: var(--ink); cursor: pointer; padding: 0;
+      transition: border-color .12s ease, background .12s ease, color .12s ease;
+    }
+    .qw-scale-btn:hover { border-color: var(--blue); }
+    .qw-scale-btn.on { background: rgba(30,91,198,.12); border-color: var(--blue); color: var(--blue); }
+    .qw-scale-btn.sel { background: var(--blue); color: var(--white); }
+    @media (max-width: 480px) {
+      .qw-scale { grid-template-columns: repeat(5, 1fr); }
+    }
+  `;
+
+  if (status === 'sent') {
     return (
-      <div style={{ padding: '40px 0', textAlign: 'center' }}>
+      <div style={{ padding: '36px 0', textAlign: 'center' }}>
         <div style={{
           width: 64, height: 64, borderRadius: '50%',
           background: '#1E5BC6', color: 'white',
@@ -2008,44 +2518,265 @@ const QuoteForm = ({ onBook }) => {
         }}>
           <Icon.Check />
         </div>
-        <h4 className="display" style={{ fontSize: 24, margin: '0 0 8px' }}>Got it, {data.name || 'friend'}!</h4>
-        <p style={{ color: '#5B6B82', margin: 0 }}>We'll text you at {data.phone || 'your number'} within an hour to confirm.</p>
+        <h4 className="display" style={{ fontSize: 24, margin: '0 0 8px' }}>Thank you, {data.name.trim()}!</h4>
+        <p style={{ color: '#5B6B82', margin: 0 }}>Your request is in. We'll text you at {formatPhone(data.phone)} shortly.</p>
+        <button type="button" onClick={reset} style={{
+          marginTop: 18, fontSize: 13, fontWeight: 700, color: '#1E5BC6',
+          textDecoration: 'underline', textUnderlineOffset: 3
+        }}>
+          Send another request
+        </button>
       </div>);
-
   }
+
+  const progress = Math.round(step / QUOTE_STEPS.length * 100);
+
   return (
-    <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div className="field">
-        <label>Your name</label>
-        <input required value={data.name} onChange={(e) => set('name', e.target.value)} placeholder="John Smith" />
+    <div>
+      <style>{wizardCss}</style>
+
+      {/* Step indicator + progress */}
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
+        <div className="mono" style={{ fontSize: 12, letterSpacing: '.18em', color: '#5B6B82' }}>
+          0{step + 1} · {QUOTE_STEPS[step].toUpperCase()}
+        </div>
+        <div className="mono" style={{ fontSize: 12, color: '#5B6B82' }}>{progress}%</div>
       </div>
-      <div className="field">
-        <label>Phone</label>
-        <input required type="tel" value={data.phone} onChange={(e) => set('phone', e.target.value)} placeholder="(901) 555-0000" />
+      <div style={{ height: 3, background: 'var(--line)', borderRadius: 2, marginBottom: 20 }}>
+        <div style={{ height: '100%', width: progress + '%', background: 'var(--blue)', borderRadius: 2, transition: 'width .35s ease' }} />
       </div>
-      <div className="field">
-        <label>Vehicle (year, make, model)</label>
-        <input value={data.vehicle} onChange={(e) => set('vehicle', e.target.value)} placeholder="2021 GMC Sierra" />
+
+      <div key={step} className="fadeup" style={{ animationDuration: '.45s' }}>
+        {step === 0 &&
+        <form onSubmit={(e) => {e.preventDefault();if (data.vehicleType.trim()) next();}}>
+            <h4 className="display" style={{ fontSize: 22, margin: '0 0 16px' }}>What are we detailing?</h4>
+            <CarSearch value={data.vehicleType}
+          onChange={(v) => set('vehicleType', v)}
+          onSelect={(v) => pick('vehicleType', v)} />
+            <button type="submit" className="btn btn-primary" disabled={!data.vehicleType.trim()}
+          style={{ width: '100%', justifyContent: 'center', marginTop: 16, opacity: data.vehicleType.trim() ? 1 : .4 }}>
+              Continue <Icon.Arrow />
+            </button>
+          </form>}
+
+        {step === 1 &&
+        <div>
+            <h4 className="display" style={{ fontSize: 22, margin: '0 0 16px' }}>What does it need?</h4>
+            <div className="qw-grid">
+              {services.map((s) =>
+            <button key={s.title} type="button"
+            className={'qw-tile' + (data.services.includes(s.title) ? ' sel' : '')}
+            onClick={() => toggleService(s.title)}>
+                  {s.title}
+                </button>
+            )}
+              <button type="button"
+            className={'qw-tile' + (data.services.includes('Not sure yet') ? ' sel' : '')}
+            onClick={() => toggleService('Not sure yet')}>
+                Not sure — recommend
+              </button>
+              <button type="button"
+            className={'qw-tile' + (data.services.includes('Other') ? ' sel' : '')}
+            onClick={() => toggleService('Other')}>
+                Other
+              </button>
+            </div>
+            {data.services.includes('Other') &&
+          <div className="field" style={{ marginTop: 12 }}>
+              <label>What do you need?</label>
+              <input autoFocus value={data.serviceOther}
+            onChange={(e) => set('serviceOther', e.target.value)} placeholder="Tell us what you need" />
+            </div>}
+            <button type="button" className="btn btn-primary" disabled={data.services.length === 0}
+          onClick={next}
+          style={{ width: '100%', justifyContent: 'center', marginTop: 16, opacity: data.services.length === 0 ? .4 : 1 }}>
+              Continue <Icon.Arrow />
+            </button>
+          </div>}
+
+        {step === 2 &&
+        <div>
+            <h4 className="display" style={{ fontSize: 22, margin: '0 0 16px' }}>How dirty is it, 1 to 10?</h4>
+            <div className="qw-scale">
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((n) =>
+            <button key={n} type="button"
+            className={'qw-scale-btn' + (data.dirt >= n ? ' on' : '') + (data.dirt === n ? ' sel' : '')}
+            onClick={() => pickCondition('dirt', n)}>
+                  {n}
+                </button>
+            )}
+            </div>
+            <div style={{
+          textAlign: 'center', marginTop: 10, minHeight: 20,
+          fontWeight: 800, fontSize: 14,
+          color: data.dirt ? '#1E5BC6' : '#5B6B82'
+        }}>
+              {data.dirt ? data.dirt + '/10 — ' + dirtLabel(data.dirt) : ' '}
+            </div>
+            <div className="qw-mini-label">Pet hair?</div>
+            <div className="qw-grid">
+              {['Yes', 'No'].map((v) =>
+            <button key={v} type="button"
+            className={'qw-tile' + (data.petHair === v ? ' sel' : '')}
+            onClick={() => pickCondition('petHair', v)}>
+                  {v}
+                </button>
+            )}
+            </div>
+          </div>}
+
+        {step === 3 &&
+        <div>
+            <h4 className="display" style={{ fontSize: 22, margin: '0 0 16px' }}>Add photos of the car?</h4>
+            <div className="qw-photos">
+              {data.photos.map((p) =>
+            <div key={p.url} className="qw-thumb">
+                  <img src={p.url} alt="Car photo" />
+                  <button type="button" onClick={() => removePhoto(p.url)}>×</button>
+                </div>
+            )}
+              {data.photos.length < 3 &&
+            <label className="qw-add">
+                  <input type="file" accept="image/*" multiple style={{ display: 'none' }}
+              onChange={(e) => {addPhotos(e.target.files);e.target.value = '';}} />
+                  + Add
+                </label>}
+            </div>
+            <button type="button" className="btn btn-primary" onClick={next}
+          style={{ width: '100%', justifyContent: 'center', marginTop: 16 }}>
+              {data.photos.length > 0 ? 'Continue' : 'Skip'} <Icon.Arrow />
+            </button>
+          </div>}
+
+        {step === 4 &&
+        <div>
+            <h4 className="display" style={{ fontSize: 22, margin: '0 0 4px' }}>Which days work?</h4>
+            <p style={{ color: '#5B6B82', fontSize: 13, margin: '0 0 14px' }}>Pick up to 3 — backups help if your first day is taken.</p>
+            <QuoteCalendar selected={data.dates} onToggle={(day) => {
+          setData((d) => {
+            const dates = d.dates.filter((x) => x !== 'Any day');
+            if (dates.includes(day)) return { ...d, dates: dates.filter((x) => x !== day) };
+            if (dates.length >= 3) return { ...d, dates };
+            return { ...d, dates: [...dates, day] };
+          });
+        }} />
+            <button type="button" className="btn btn-primary" disabled={data.dates.length === 0}
+          onClick={next}
+          style={{ width: '100%', justifyContent: 'center', marginTop: 16, opacity: data.dates.length === 0 ? .4 : 1 }}>
+              Continue <Icon.Arrow />
+            </button>
+            <div style={{ textAlign: 'center', marginTop: 10 }}>
+              <button type="button" className="qw-back"
+            onClick={() => pick('dates', ['Any day'])}>
+                I'm flexible — any day works
+              </button>
+            </div>
+          </div>}
+
+        {step === 5 &&
+        <div>
+            <h4 className="display" style={{ fontSize: 22, margin: '0 0 16px' }}>What time of day?</h4>
+            <div className="qw-grid">
+              {TIME_SLOTS.map((t) =>
+            <button key={t} type="button"
+            className={'qw-tile' + (data.timeSlot === t ? ' sel' : '')}
+            style={t === 'Any time' ? { gridColumn: '1 / -1' } : undefined}
+            onClick={() => pick('timeSlot', t)}>
+                  {t}
+                </button>
+            )}
+            </div>
+          </div>}
+
+        {step === 6 &&
+        <form onSubmit={(e) => {e.preventDefault();if (data.area.trim()) next();}}>
+            <h4 className="display" style={{ fontSize: 22, margin: '0 0 16px' }}>Where's the vehicle?</h4>
+            <AddressField value={data.area}
+          onChange={(v) => set('area', v)}
+          onSelect={(v) => pick('area', v)} />
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 16 }}>
+              Continue <Icon.Arrow />
+            </button>
+          </form>}
+
+        {step === 7 &&
+        <form onSubmit={(e) => {e.preventDefault();if (validateContact()) next();}}>
+            <h4 className="display" style={{ fontSize: 22, margin: '0 0 16px' }}>How do we reach you?</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div className="field">
+                <label>Your name</label>
+                <input required autoFocus value={data.name}
+              onChange={(e) => set('name', e.target.value)} placeholder="John Smith" />
+                {errors.name && <p className="qw-err">{errors.name}</p>}
+              </div>
+              <div className="field">
+                <label>Phone</label>
+                <input required type="tel" inputMode="tel" value={data.phone}
+              onChange={(e) => set('phone', formatPhone(e.target.value))} placeholder="(901) 555-0000" />
+                {errors.phone && <p className="qw-err">{errors.phone}</p>}
+              </div>
+              <div className="field">
+                <label>Email (optional)</label>
+                <input type="email" value={data.email}
+              onChange={(e) => set('email', e.target.value)} placeholder="you@example.com" />
+                {errors.email && <p className="qw-err">{errors.email}</p>}
+              </div>
+            </div>
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 16 }}>
+              Continue <Icon.Arrow />
+            </button>
+            <p style={{ fontSize: 12, color: '#5B6B82', margin: '10px 0 0', textAlign: 'center' }}>
+              No spam. We text you to confirm details.
+            </p>
+          </form>}
+
+        {step === 8 &&
+        <div>
+            <h4 className="display" style={{ fontSize: 22, margin: '0 0 16px' }}>Everything correct?</h4>
+            <div className="qw-review">
+              {[
+            ['Vehicle', data.vehicleType, 0],
+            ['Services', serviceList().join(', '), 1],
+            ['Condition', conditionText(), 2],
+            ['Photos', data.photos.length > 0 ? data.photos.length + ' attached' : 'None', 3],
+            ['Days', data.dates.join(' / '), 4],
+            ['Time', data.timeSlot, 5],
+            ['Address', data.area, 6],
+            ['Name', data.name.trim(), 7],
+            ['Phone', formatPhone(data.phone), 7],
+            ['Email', data.email.trim() || '—', 7]].
+            map(([k, v, idx]) =>
+            <button key={k} type="button" className="qw-review-row" onClick={() => editStep(idx)}>
+                  <span className="k">{k}</span>
+                  <span className="v">{v}</span>
+                  <svg className="e" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18 L15 12 L9 6" /></svg>
+                </button>
+            )}
+            </div>
+            {status === 'error' &&
+          <p style={{ fontSize: 13, color: '#C0392B', margin: '12px 0 0' }}>
+                Something went wrong sending your request. Try again, or call us at <a href={PHONE_HREF} style={{ fontWeight: 700, textDecoration: 'underline' }}>{PHONE}</a>.
+              </p>}
+            <button type="button" className="btn btn-primary" disabled={status === 'sending'} onClick={send}
+          style={{ width: '100%', justifyContent: 'center', marginTop: 16, opacity: status === 'sending' ? .6 : 1 }}>
+              {status === 'sending' ? 'Sending…' : <>OK — send my request <Icon.Arrow /></>}
+            </button>
+          </div>}
       </div>
-      <div className="field">
-        <label>Service</label>
-        <select value={data.service} onChange={(e) => set('service', e.target.value)}>
-          {services.map((s) => <option key={s.title}>{s.title}</option>)}
-          <option>Custom / not sure</option>
-        </select>
-      </div>
-      <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
-        <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }}>
-          Request Quote <Icon.Arrow />
+
+      {/* Footer: back + full booking */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 18 }}>
+        {step > 0 ?
+        <button type="button" className="qw-back" onClick={back}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18 L9 12 L15 6" /></svg>
+            Back
+          </button> :
+        <span />}
+        <button type="button" className="qw-back" onClick={onBook}>
+          Prefer the full booking form?
         </button>
-        <button type="button" className="btn btn-dark" onClick={onBook}>
-          Full booking
-        </button>
       </div>
-      <p style={{ fontSize: 12, color: '#5B6B82', margin: 0, textAlign: 'center' }}>
-        No spam. We text you to confirm details.
-      </p>
-    </form>);
+    </div>);
 
 };
 

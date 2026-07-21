@@ -2,6 +2,7 @@
 
 const BookingModal = ({ open, onClose }) => {
   const [step, setStep] = React.useState(1);
+  const [sendState, setSendState] = React.useState('idle'); // idle | sending | sent | error
   const [data, setData] = React.useState({
     service: '', addons: [], vehicle: '', size: 'Sedan',
     date: '', time: '', address: '',
@@ -16,6 +17,7 @@ const BookingModal = ({ open, onClose }) => {
     if (open) {
       document.body.style.overflow = 'hidden';
       setStep(1);
+      setSendState('idle');
     } else {
       document.body.style.overflow = '';
     }
@@ -24,8 +26,68 @@ const BookingModal = ({ open, onClose }) => {
 
   if (!open) return null;
 
+  if (sendState === 'sent') {
+    return (
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal" onClick={e => e.stopPropagation()} style={{ padding: 44, textAlign: 'center' }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: '50%',
+            background: '#1E5BC6', color: 'white',
+            display: 'grid', placeItems: 'center',
+            margin: '0 auto 18px',
+          }}>
+            <Icon.Check />
+          </div>
+          <h3 className="display" style={{ fontSize: 26, margin: '0 0 8px' }}>Thank you, {data.name.trim()}!</h3>
+          <p style={{ color: '#5B6B82', margin: 0 }}>Your booking request is in. We'll text you at {data.phone} shortly.</p>
+          <button onClick={onClose} className="btn btn-primary" style={{ marginTop: 24 }}>
+            Done <Icon.Check />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const next = () => setStep(s => Math.min(4, s + 1));
   const prev = () => setStep(s => Math.max(1, s - 1));
+
+  const sendBooking = async () => {
+    if (!data.name.trim() || !data.phone.trim()) {
+      setSendState('invalid');
+      return;
+    }
+    setSendState('sending');
+    try {
+      const fields = {
+        _subject: 'New FULL booking - ' + data.name.trim(),
+        _template: 'table',
+        _captcha: 'false',
+        Name: data.name.trim(),
+        Phone: data.phone,
+        Service: data.service,
+        Addons: data.addons.join(', ') || 'None',
+        Vehicle: data.size + (data.vehicle ? ' - ' + data.vehicle : ''),
+        Date: data.date || 'Not set',
+        Time: data.time || 'Not set',
+        Address: data.address || 'Not set',
+        Notes: data.notes || 'None',
+      };
+      if (data.email.trim()) {
+        fields.email = data.email.trim(); // reply-to for the lead email
+      } else {
+        fields.Email = 'Not provided';
+      }
+      const res = await fetch('https://formsubmit.co/ajax/' + FORMSUBMIT_KEY, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(fields),
+      });
+      if (!res.ok) throw new Error('send failed');
+      setSendState('sent');
+    } catch (err) {
+      setSendState('error');
+    }
+  };
 
   const sizeMultiplier = { 'Sedan': 1, 'SUV / Truck': 1.2, 'Large / 3-row': 1.4 };
   const serviceList = [
@@ -267,10 +329,19 @@ const BookingModal = ({ open, onClose }) => {
               Continue <Icon.Arrow />
             </button>
           ) : (
-            <button onClick={() => { onClose(); alert('Booking sent! We\'ll text you within an hour.'); }}
-              className="btn btn-primary">
-              Send Booking <Icon.Check />
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {(sendState === 'invalid' || sendState === 'error') && (
+                <span style={{ fontSize: 12, color: '#C0392B', fontWeight: 600 }}>
+                  {sendState === 'invalid'
+                    ? 'Check your name & phone, then try again.'
+                    : <>Something went wrong. Try again, or call us at <a href={PHONE_HREF} style={{ fontWeight: 700, textDecoration: 'underline', color: '#C0392B' }}>{PHONE}</a>.</>}
+                </span>
+              )}
+              <button onClick={sendBooking} disabled={sendState === 'sending'}
+                className="btn btn-primary" style={{ opacity: sendState === 'sending' ? .6 : 1 }}>
+                {sendState === 'sending' ? 'Sending…' : <>Send Booking <Icon.Check /></>}
+              </button>
+            </div>
           )}
         </div>
       </div>
