@@ -1261,19 +1261,22 @@ const reelClips = [
 
 const ReelCard = ({ clip, index }) => {
   const ref = React.useRef(null);
+  const cardRef = React.useRef(null);
   const [playing, setPlaying] = React.useState(false);
   const [muted, setMuted] = React.useState(true);
+  const userPaused = React.useRef(false);
 
   const play = () => {
     const v = ref.current;
     if (!v) return;
+    userPaused.current = false;
     v.play().then(() => setPlaying(true)).catch(() => {});
   };
   const pause = () => {
     const v = ref.current;
     if (!v) return;
+    userPaused.current = true;
     v.pause();
-    v.currentTime = 0;
     setPlaying(false);
   };
   const toggleMute = (e) => {
@@ -1284,10 +1287,29 @@ const ReelCard = ({ clip, index }) => {
     setMuted(v.muted);
   };
 
+  // Auto-play (muted) whenever the clip is on screen; tap pauses or resumes
+  React.useEffect(() => {
+    if (!cardRef.current) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      const v = ref.current;
+      if (!v) return;
+      if (entry.isIntersecting) {
+        if (!userPaused.current) {
+          v.play().then(() => setPlaying(true)).catch(() => {});
+        }
+      } else {
+        v.pause();
+        setPlaying(false);
+        userPaused.current = false;
+      }
+    }, { threshold: 0.35 });
+    obs.observe(cardRef.current);
+    return () => obs.disconnect();
+  }, []);
+
   return (
     <div
-      onMouseEnter={play}
-      onMouseLeave={pause}
+      ref={cardRef}
       onClick={() => playing ? pause() : play()}
       style={{
         position: 'relative',
@@ -1336,7 +1358,7 @@ const ReelCard = ({ clip, index }) => {
           boxShadow: playing ? '0 0 8px #2F7BFF' : 'none',
           transition: 'all .2s'
         }}></span>
-        {playing ? 'Playing' : 'Hover to play'}
+        {playing ? 'Playing' : 'Tap to play'}
       </div>
 
       {/* Mute toggle (only when playing) */}
@@ -1444,7 +1466,7 @@ const Reel = () =>
         <SectionTitle
         eyebrow="In motion"
         title={<>Watch the <span style={{ color: '#2F7BFF' }}>shine.</span></>}
-        subtitle="Hover over a clip to see the work in motion — real jobs, real cars, real results. Tap to play with sound."
+        subtitle="Real jobs, real cars, real results — the clips play as you scroll. Tap the speaker for sound."
         light
         align="center" />
       
