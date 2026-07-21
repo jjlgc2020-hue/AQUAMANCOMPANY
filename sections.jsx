@@ -1965,7 +1965,7 @@ const Contact = ({ onBook }) =>
 
         <Reveal delay={0.15}>
           <div style={{
-          background: 'white', color: '#0B1A2E', padding: 36,
+          background: 'white', color: '#0B1A2E', padding: 'clamp(20px, 5vw, 36px)',
           position: 'relative',
           clipPath: 'polygon(0 0, calc(100% - 28px) 0, 100% 28px, 100% 100%, 28px 100%, 0 calc(100% - 28px))',
           boxShadow: '0 30px 60px rgba(0,0,0,.4)'
@@ -2774,6 +2774,46 @@ const QuoteForm = ({ onBook }) => {
         </div>}
     </div>);
 
+};
+
+/* Quote modal — opens the wizard instantly from any booking CTA */
+const QuoteModal = ({ open, onClose }) => {
+  React.useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <div className="modal-overlay qm-wrap" onClick={onClose}
+    style={{ display: 'block', overflowY: 'auto' }}>
+      <style>{`
+        .qm-sheet { max-width: 560px; margin: 4vh auto; }
+        @media (max-width: 720px) {
+          .qm-wrap { padding: 0 !important; }
+          .qm-sheet {
+            max-width: 100% !important; margin: 0 !important;
+            min-height: 100dvh; border-radius: 0 !important;
+          }
+        }
+      `}</style>
+      <div className="modal qm-sheet" onClick={(e) => e.stopPropagation()}>
+        <div style={{ padding: 'clamp(20px, 5vw, 32px)', position: 'relative' }}>
+          <button type="button" onClick={onClose} aria-label="Close" style={{
+            position: 'absolute', top: 14, right: 14, width: 36, height: 36,
+            display: 'grid', placeItems: 'center', borderRadius: '50%',
+            background: 'var(--paper)', color: 'var(--ink)',
+            fontSize: 20, lineHeight: 1, cursor: 'pointer'
+          }}>×</button>
+          <div className="eyebrow" style={{ marginBottom: 6 }}>Request a quote</div>
+          <h3 className="display" style={{ fontSize: 26, margin: '0 0 20px' }}>Get on the schedule.</h3>
+          <QuoteForm />
+        </div>
+      </div>
+    </div>);
 };
 
 /* ─────────── OUTRO / BRAND REVEAL ─────────── */

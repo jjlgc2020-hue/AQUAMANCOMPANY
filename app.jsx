@@ -1,14 +1,9 @@
 // Root app
 
 const App = () => {
-  // Every "book" button scrolls to the quote wizard in the contact section
-  const openBooking = () => {
-    const el = document.getElementById('contact');
-    if (el) {
-      const y = el.getBoundingClientRect().top + window.scrollY - 80;
-      window.scrollTo({ top: y, behavior: 'smooth' });
-    }
-  };
+  // Every "book" button opens the quote wizard instantly
+  const [quoteOpen, setQuoteOpen] = React.useState(false);
+  const openBooking = () => setQuoteOpen(true);
 
   // Smooth scroll for nav links
   React.useEffect(() => {
@@ -48,6 +43,8 @@ const App = () => {
       <a href={PHONE_HREF} className="fab-call" aria-label="Call Aquaman">
         <Icon.Phone />
       </a>
+
+      <QuoteModal open={quoteOpen} onClose={() => setQuoteOpen(false)} />
     </>
   );
 };
