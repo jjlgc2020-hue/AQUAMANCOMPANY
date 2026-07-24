@@ -1,8 +1,12 @@
 // Root app
 
 const App = () => {
-  // Every "book" button opens the quote wizard instantly
-  const [quoteOpen, setQuoteOpen] = React.useState(false);
+  // Every "book" button opens the quote wizard instantly. The shareable
+  // /agenda link lands here with ?book=1 and opens the form automatically.
+  const [quoteOpen, setQuoteOpen] = React.useState(() => {
+    try { return new URLSearchParams(window.location.search).get('book') === '1'; }
+    catch (e) { return false; }
+  });
   const openBooking = () => setQuoteOpen(true);
 
   // Smooth scroll for nav links

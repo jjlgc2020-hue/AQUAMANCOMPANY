@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Book your detail — Aquaman Services</title>
+<meta name="description" content="Book your mobile car detailing with Aquaman Services." />
+<script>
+  // Short shareable link. Carries the ?src= origin (facebook, instagram, telefono, qr…)
+  // through to the home page and opens the quote form automatically.
+  (function () {
+    try {
+      var src = new URLSearchParams(window.location.search).get('src') || '';
+      var to = '/?book=1' + (src ? '&src=' + encodeURIComponent(src) : '');
+      window.location.replace(to);
+    } catch (e) {
+      window.location.replace('/?book=1');
+    }
+  })();
+</script>
+<style>
+  body { margin:0; font-family: system-ui, sans-serif; background:#0A1420; color:#EAF0F8;
+    display:grid; place-items:center; min-height:100vh; text-align:center; }
+  a { color:#2F7BFF; }
+</style>
+</head>
+<body>
+  <p>Opening the booking form…<br /><a href="/?book=1">Tap here if it doesn't load.</a></p>
+</body>
+</html>

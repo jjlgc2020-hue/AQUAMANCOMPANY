@@ -24,6 +24,17 @@ const getSupabase = () => {
   return _supaClient;
 };
 
+// Where the lead came from — read from the ?src= param on the URL (facebook, instagram,
+// telefono, qr, web). The /agenda short link carries this through. Defaults to 'web'.
+const LEAD_SOURCE = (() => {
+  try {
+    const s = (new URLSearchParams(window.location.search).get('src') || '').toLowerCase().trim();
+    return s || 'web';
+  } catch (e) {
+    return 'web';
+  }
+})();
+
 /* ─────────── NAV ─────────── */
 
 const CircularLogo = () =>
@@ -2385,7 +2396,8 @@ const QuoteForm = ({ onBook }) => {
       Phone: formatPhone(data.phone),
       Vehicle: data.vehicleType,
       Services: serviceList().join(', '),
-      Location: data.area
+      Location: data.area,
+      Source: LEAD_SOURCE
     };
     if (data.email.trim()) {
       fields.email = data.email.trim(); // reply-to for the lead email
@@ -2420,7 +2432,8 @@ const QuoteForm = ({ onBook }) => {
         vehicle: data.vehicleType,
         services: serviceList().join(', '),
         area: data.area,
-        photos: photoUrls
+        photos: photoUrls,
+        source: LEAD_SOURCE
       });
       return { ok: !ins.error, photoUrls };
     } catch (err) {
