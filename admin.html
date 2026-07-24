@@ -61,27 +61,30 @@
   .search input:focus { outline: none; border-color: var(--blue); }
 
   /* Lead cards */
-  .leads { display: grid; gap: 12px; }
-  .lead { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; transition: border-color .15s ease; }
+  /* Lead cards — compact, structured: photo thumbnail + stacked info */
+  .leads { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
+  .lead { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; transition: border-color .15s ease; }
   .lead:hover { border-color: var(--line-2); }
-  .lead.done { opacity: .55; }
-  .lead-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
-  .lead-name { font-size: 17px; font-weight: 800; letter-spacing: -.01em; }
-  .lead-when { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .lead-actions { display: flex; gap: 8px; flex-shrink: 0; }
-  .icon-btn { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--line-2); background: transparent; color: var(--muted); cursor: pointer; display: grid; place-items: center; font-size: 15px; }
+  .lead.done { opacity: .5; }
+  .lead-body { display: flex; gap: 13px; align-items: flex-start; }
+  .lead-thumb { position: relative; width: 68px; height: 68px; border-radius: 10px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--line-2); cursor: pointer; }
+  .lead-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .lead-thumb--empty { display: grid; place-items: center; font-size: 26px; background: rgba(255,255,255,.04); cursor: default; }
+  .thumb-more { position: absolute; right: 3px; bottom: 3px; background: rgba(11,20,32,.85); color: #fff; font-size: 10px; font-weight: 800; padding: 1px 5px; border-radius: 6px; }
+  .lead-main { flex: 1; min-width: 0; }
+  .lead-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .lead-name { font-size: 16px; font-weight: 800; letter-spacing: -.01em; overflow-wrap: anywhere; }
+  .lead-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: center; }
+  .icon-btn { width: 30px; height: 30px; border-radius: 7px; border: 1px solid var(--line-2); background: transparent; color: var(--muted); cursor: pointer; display: grid; place-items: center; font-size: 14px; }
   .icon-btn:hover { color: var(--text); border-color: var(--blue); }
-  .badge { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; padding: 4px 9px; border-radius: 999px; }
+  .badge { font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 4px 8px; border-radius: 999px; }
   .badge.new { background: rgba(47,123,255,.18); color: #7fb0ff; }
   .badge.contacted { background: rgba(120,200,140,.16); color: #8fe0a8; }
-
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 18px; }
-  .cell .k { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
-  .cell .v { font-size: 14px; font-weight: 600; word-break: break-word; }
-  .contact-row { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 12px; }
-  .contact-row a { font-weight: 700; }
-  .photos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-  .photos img { width: 78px; height: 78px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line-2); cursor: pointer; }
+  .lead-meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .lead-contact { display: flex; gap: 14px; flex-wrap: wrap; margin: 8px 0 6px; font-size: 13px; }
+  .lead-contact a { font-weight: 700; }
+  .lead-line { font-size: 13px; color: var(--text); margin-top: 4px; display: flex; gap: 8px; align-items: baseline; }
+  .lead-line .li { flex-shrink: 0; opacity: .85; }
 
   .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
   .spinner { width: 34px; height: 34px; border: 3px solid var(--line-2); border-top-color: var(--blue-bright); border-radius: 50%; animation: spin .8s linear infinite; margin: 60px auto; }
@@ -300,41 +303,42 @@
   }
 
   function leadCard(l) {
-    var photos = (l.photos || []).map(function (u) {
-      return '<img src="' + esc(u) + '" onclick="window.open(this.src)" alt="car photo" />';
-    }).join('');
-    var cell = function (k, v) {
-      if (!v) return '';
-      return '<div class="cell"><div class="k">' + k + '</div><div class="v">' + esc(v) + '</div></div>';
-    };
     var done = l.status === 'contacted';
     var srcMap = { facebook: '📘 Facebook', instagram: '📸 Instagram', telefono: '📞 Phone', phone: '📞 Phone', whatsapp: '💬 WhatsApp', qr: '▦ QR', web: '🌐 Web' };
     var src = (l.source || 'web').toLowerCase();
-    var srcBadge = '<span class="src-badge">' + esc(srcMap[src] || src) + '</span>';
+    var photos = l.photos || [];
+    var thumb = photos.length
+      ? '<div class="lead-thumb" onclick="window.open(\'' + esc(photos[0]) + '\')"><img src="' + esc(photos[0]) + '" alt="car" />'
+        + (photos.length > 1 ? '<span class="thumb-more">+' + (photos.length - 1) + '</span>' : '') + '</div>'
+      : '<div class="lead-thumb lead-thumb--empty">🚗</div>';
+    var line = function (icon, val) {
+      return val ? '<div class="lead-line"><span class="li">' + icon + '</span><span>' + esc(val) + '</span></div>' : '';
+    };
+    var vehLine = [l.vehicle, l.services].filter(Boolean).join(' · ');
+    var when = [l.days, l.time_slot].filter(Boolean).join(' · ');
     return '' +
       '<div class="lead' + (done ? ' done' : '') + '">' +
-        '<div class="lead-head">' +
-          '<div><div class="lead-name">' + esc(l.name || 'Unknown') + '</div>' +
-          '<div class="lead-when mono">' + fmtDate(l.created_at) + ' · ' + srcBadge + '</div></div>' +
-          '<div class="lead-actions">' +
-            '<span class="badge ' + (done ? 'contacted' : 'new') + '">' + (done ? 'Contacted' : 'New') + '</span>' +
-            '<button class="icon-btn" title="' + (done ? 'Mark as new' : 'Mark contacted') + '" onclick="AQ.toggle(\'' + l.id + '\')">' + (done ? '↩' : '✓') + '</button>' +
-            '<button class="icon-btn" title="Delete" onclick="AQ.remove(\'' + l.id + '\')">🗑</button>' +
+        '<div class="lead-body">' +
+          thumb +
+          '<div class="lead-main">' +
+            '<div class="lead-top">' +
+              '<div class="lead-name">' + esc(l.name || 'Unknown') + '</div>' +
+              '<div class="lead-actions">' +
+                '<span class="badge ' + (done ? 'contacted' : 'new') + '">' + (done ? 'Contacted' : 'New') + '</span>' +
+                '<button class="icon-btn" title="' + (done ? 'Mark as new' : 'Mark contacted') + '" onclick="AQ.toggle(\'' + l.id + '\')">' + (done ? '↩' : '✓') + '</button>' +
+                '<button class="icon-btn" title="Delete" onclick="AQ.remove(\'' + l.id + '\')">🗑</button>' +
+              '</div>' +
+            '</div>' +
+            '<div class="lead-meta mono"><span class="src-badge">' + esc(srcMap[src] || src) + '</span> · ' + fmtDate(l.created_at) + '</div>' +
+            '<div class="lead-contact">' +
+              (l.phone ? '<a href="tel:' + esc(l.phone.replace(/[^0-9+]/g, '')) + '">📞 ' + esc(l.phone) + '</a>' : '') +
+              (l.email ? '<a href="mailto:' + esc(l.email) + '">✉ ' + esc(l.email) + '</a>' : '') +
+            '</div>' +
+            line('🚗', vehLine) +
+            line('📍', l.area) +
+            line('🗓', when) +
           '</div>' +
         '</div>' +
-        '<div class="contact-row">' +
-          (l.phone ? '<a href="tel:' + esc(l.phone.replace(/[^0-9+]/g, '')) + '">📞 ' + esc(l.phone) + '</a>' : '') +
-          (l.email ? '<a href="mailto:' + esc(l.email) + '">✉ ' + esc(l.email) + '</a>' : '') +
-        '</div>' +
-        '<div class="grid">' +
-          cell('Vehicle', l.vehicle) +
-          cell('Services', l.services) +
-          cell('Condition', l.condition) +
-          cell('Preferred days', l.days) +
-          cell('Time', l.time_slot) +
-          cell('Location', l.area) +
-        '</div>' +
-        (photos ? '<div class="photos">' + photos + '</div>' : '') +
       '</div>';
   }
 
