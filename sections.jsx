@@ -2063,7 +2063,7 @@ const VEHICLE_TYPES = [
   { label: 'Coupe / Sports', glyph: 'Coupe' },
   { label: 'Other', glyph: 'Other' }];
 
-const QUOTE_STEPS = ['Vehicle', 'Services', 'Condition', 'Photos', 'Days', 'Time', 'Address', 'Contact', 'Review'];
+const QUOTE_STEPS = ['Your car', 'Photos & location', 'Your details'];
 
 const TIME_SLOTS = [
 'Morning · 8–11 AM',
@@ -2298,26 +2298,10 @@ const QuoteForm = ({ onBook }) => {
     photos: [], dates: [], timeSlot: '', area: '', name: '', phone: '', email: ''
   });
   const [errors, setErrors] = React.useState({});
-  const [reviewReturn, setReviewReturn] = React.useState(false);
   const [status, setStatus] = React.useState('idle'); // idle | sending | sent | error
   const set = (k, v) => setData((d) => ({ ...d, [k]: v }));
-  const next = () => {
-    if (reviewReturn) {
-      setReviewReturn(false);
-      setStep(QUOTE_STEPS.length - 1);
-      return;
-    }
-    setStep((s) => Math.min(s + 1, QUOTE_STEPS.length - 1));
-  };
+  const next = () => setStep((s) => Math.min(s + 1, QUOTE_STEPS.length - 1));
   const back = () => setStep((s) => Math.max(0, s - 1));
-  const editStep = (i) => {
-    setReviewReturn(true);
-    setStep(i);
-  };
-  const pick = (k, v) => {
-    set(k, v);
-    setTimeout(next, 160);
-  };
 
   const toggleService = (title) => {
     setData((d) => {
@@ -2326,30 +2310,49 @@ const QuoteForm = ({ onBook }) => {
     });
   };
 
-  const pickCondition = (k, v) => {
-    const merged = { ...data, [k]: v };
-    setData(merged);
-    if (merged.dirt && merged.petHair) setTimeout(next, 200);
-  };
-
-  const addPhotos = async (files) => {
-    const room = 3 - data.photos.length;
-    const list = [...files].slice(0, Math.max(0, room));
+  // Photos are tagged 'Exterior' or 'Interior' so the two upload zones stay separate.
+  const addPhotos = async (kind, files) => {
+    const current = data.photos.filter((p) => p.kind === kind).length;
+    const list = [...files].slice(0, Math.max(0, 3 - current));
     if (!list.length) return;
     const shrunk = await Promise.all(list.map(shrinkPhoto));
     setData((d) => ({
       ...d,
-      photos: [...d.photos, ...shrunk.map((blob, i) => ({
-        blob,
-        name: (list[i].name || 'photo').replace(/\.[^.]+$/, '') + '.jpg',
+      photos: [...d.photos, ...shrunk.map((blob) => ({
+        blob, kind,
+        name: kind.toLowerCase() + '-' + (window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : Date.now()) + '.jpg',
         url: URL.createObjectURL(blob)
-      }))].slice(0, 3)
+      }))]
     }));
   };
 
   const removePhoto = (url) => {
     URL.revokeObjectURL(url);
     setData((d) => ({ ...d, photos: d.photos.filter((p) => p.url !== url) }));
+  };
+
+  // A big tappable upload zone for one photo kind (Exterior / Interior).
+  const PhotoZone = (kind, glyph) => {
+    const shots = data.photos.filter((p) => p.kind === kind);
+    return (
+      <div>
+        <div className="qw-zone-label">{kind}</div>
+        <label className={'qw-zone' + (shots.length ? ' filled' : '')}>
+          <input type="file" accept="image/*" capture="environment" multiple style={{ display: 'none' }}
+          onChange={(e) => {addPhotos(kind, e.target.files);e.target.value = '';}} />
+          {glyph}
+          <div className="qw-zone-title">{shots.length ? 'Add more' : 'Add photo'}</div>
+          {shots.length > 0 &&
+          <div className="qw-zone-thumbs" onClick={(e) => e.preventDefault()}>
+              {shots.map((p) =>
+            <div key={p.url} className="qw-zone-thumb">
+                  <img src={p.url} alt={kind + ' photo'} />
+                  <span onClick={(e) => {e.preventDefault();e.stopPropagation();removePhoto(p.url);}}>×</span>
+                </div>
+            )}
+            </div>}
+        </label>
+      </div>);
   };
 
   const validateContact = () => {
@@ -2382,9 +2385,6 @@ const QuoteForm = ({ onBook }) => {
       Phone: formatPhone(data.phone),
       Vehicle: data.vehicleType,
       Services: serviceList().join(', '),
-      Condition: conditionText(),
-      Days: data.dates.join(' / '),
-      Time: data.timeSlot,
       Location: data.area
     };
     if (data.email.trim()) {
@@ -2419,9 +2419,6 @@ const QuoteForm = ({ onBook }) => {
         email: data.email.trim() || null,
         vehicle: data.vehicleType,
         services: serviceList().join(', '),
-        condition: conditionText(),
-        days: data.dates.join(' / '),
-        time_slot: data.timeSlot,
         area: data.area,
         photos: photoUrls
       });
@@ -2470,20 +2467,19 @@ const QuoteForm = ({ onBook }) => {
       photos: [], dates: [], timeSlot: '', area: '', name: '', phone: '', email: ''
     });
     setErrors({});
-    setReviewReturn(false);
     setStatus('idle');
     setStep(0);
   };
 
   const wizardCss = `
-    .qw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .qw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .qw-tile {
-      display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
-      padding: 16px 14px; min-height: 64px;
+      display: flex; align-items: center;
+      padding: 11px 12px; min-height: 42px;
       border: 1px solid var(--line); background: var(--white);
-      font-family: inherit; font-weight: 700; font-size: 14px; color: var(--ink);
+      font-family: inherit; font-weight: 700; font-size: 13px; line-height: 1.2; color: var(--ink);
       text-align: left; cursor: pointer;
-      clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+      clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
       transition: border-color .15s ease, background .15s ease, transform .1s ease;
     }
     .qw-tile:hover { border-color: var(--blue); }
@@ -2496,8 +2492,8 @@ const QuoteForm = ({ onBook }) => {
       padding: 4px 0; letter-spacing: .04em;
     }
     .qw-back:hover { color: var(--ink); }
-    .qw-cal { border: 1px solid var(--line); padding: 14px; background: var(--white); }
-    .qw-cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .qw-cal { border: 1px solid var(--line); padding: 10px; background: var(--white); }
+    .qw-cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
     .qw-cal-nav {
       width: 30px; height: 30px; display: grid; place-items: center;
       border: 1px solid var(--line); border-radius: 4px; color: var(--ink);
@@ -2508,8 +2504,8 @@ const QuoteForm = ({ onBook }) => {
     .qw-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
     .qw-cal-dow { font-size: 10px; color: #5B6B82; text-align: center; letter-spacing: .1em; padding: 4px 0; }
     .qw-cal-day {
-      height: 38px; display: grid; place-items: center;
-      font-family: inherit; font-weight: 600; font-size: 14px; color: var(--ink);
+      height: 32px; display: grid; place-items: center;
+      font-family: inherit; font-weight: 600; font-size: 13px; color: var(--ink);
       border: 1px solid transparent; border-radius: 4px; cursor: pointer;
       transition: border-color .12s ease, background .12s ease;
     }
@@ -2564,14 +2560,37 @@ const QuoteForm = ({ onBook }) => {
     .qw-review-row .v { flex: 1; }
     .qw-scale { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; }
     .qw-scale-btn {
-      height: 44px; border: 1px solid var(--line); border-radius: 4px;
+      height: 36px; border: 1px solid var(--line); border-radius: 4px;
       background: var(--white); font-family: inherit; font-weight: 700;
-      font-size: 13px; color: var(--ink); cursor: pointer; padding: 0;
+      font-size: 12px; color: var(--ink); cursor: pointer; padding: 0;
       transition: border-color .12s ease, background .12s ease, color .12s ease;
     }
     .qw-scale-btn:hover { border-color: var(--blue); }
     .qw-scale-btn.on { background: rgba(30,91,198,.12); border-color: var(--blue); color: var(--blue); }
     .qw-scale-btn.sel { background: var(--blue); color: var(--white); }
+    .qw-section { margin-top: 14px; }
+    .qw-section:first-child { margin-top: 0; }
+    .qw-slabel { font-size: 12px; font-weight: 800; color: var(--ink); margin: 0 0 8px; letter-spacing: -.01em; }
+    .qw-photozones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .qw-zone-label { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #5B6B82; margin-bottom: 6px; }
+    .qw-zone {
+      position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 5px; padding: 12px 8px; min-height: 78px;
+      border: 1.5px dashed var(--line); border-radius: 8px; background: var(--paper-2);
+      color: #5B6B82; cursor: pointer; text-align: center;
+      transition: border-color .15s ease, background .15s ease, color .15s ease;
+    }
+    .qw-zone:hover { border-color: var(--blue); color: var(--blue); background: rgba(30,91,198,.05); }
+    .qw-zone.filled { border-style: solid; border-color: var(--blue); background: rgba(30,91,198,.05); }
+    .qw-zone svg { color: var(--blue); }
+    .qw-zone-title { font-size: 13px; font-weight: 800; color: var(--ink); }
+    .qw-zone-thumbs { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+    .qw-zone-thumb { position: relative; width: 46px; height: 46px; }
+    .qw-zone-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+    .qw-zone-thumb span {
+      position: absolute; top: -7px; right: -7px; width: 20px; height: 20px; border-radius: 50%;
+      background: var(--ink); color: #fff; font-size: 12px; line-height: 1; display: grid; place-items: center; cursor: pointer;
+    }
     @media (max-width: 480px) {
       .qw-scale { grid-template-columns: repeat(5, 1fr); }
     }
@@ -2599,180 +2618,90 @@ const QuoteForm = ({ onBook }) => {
       </div>);
   }
 
-  const progress = Math.round(step / QUOTE_STEPS.length * 100);
+  const progress = Math.round(step / (QUOTE_STEPS.length - 1) * 100);
+  const page0ok = data.vehicleType.trim() && data.services.length > 0;
+  const page1ok = data.area.trim();
 
   return (
     <div>
       <style>{wizardCss}</style>
 
       {/* Step indicator + progress */}
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
-        <div className="mono" style={{ fontSize: 12, letterSpacing: '.18em', color: '#5B6B82' }}>
-          0{step + 1} · {QUOTE_STEPS[step].toUpperCase()}
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
+        <div className="mono" style={{ fontSize: 11, letterSpacing: '.14em', color: '#5B6B82' }}>
+          0{step + 1} / 0{QUOTE_STEPS.length} · {QUOTE_STEPS[step].toUpperCase()}
         </div>
-        <div className="mono" style={{ fontSize: 12, color: '#5B6B82' }}>{progress}%</div>
+        <div className="mono" style={{ fontSize: 11, color: '#5B6B82' }}>{progress}%</div>
       </div>
-      <div style={{ height: 3, background: 'var(--line)', borderRadius: 2, marginBottom: 20 }}>
+      <div style={{ height: 3, background: 'var(--line)', borderRadius: 2, marginBottom: 16 }}>
         <div style={{ height: '100%', width: progress + '%', background: 'var(--blue)', borderRadius: 2, transition: 'width .35s ease' }} />
       </div>
 
-      <div key={step} className="fadeup" style={{ animationDuration: '.45s' }}>
+      <div key={step} className="fadeup" style={{ animationDuration: '.4s' }}>
+        {/* ── Page 1 · Your car (+ photos) ── */}
         {step === 0 &&
-        <form onSubmit={(e) => {e.preventDefault();if (data.vehicleType.trim()) next();}}>
-            <h4 className="display" style={{ fontSize: 22, margin: '0 0 16px' }}>What are we detailing?</h4>
-            <CarSearch value={data.vehicleType}
-          onChange={(v) => set('vehicleType', v)}
-          onSelect={(v) => pick('vehicleType', v)} />
-            <button type="submit" className="btn btn-primary" disabled={!data.vehicleType.trim()}
-          style={{ width: '100%', justifyContent: 'center', marginTop: 16, opacity: data.vehicleType.trim() ? 1 : .4 }}>
+        <div>
+            <h4 className="display" style={{ fontSize: 18, margin: '0 0 14px' }}>Tell us about your car</h4>
+
+            <div className="qw-section">
+              <div className="qw-slabel">Make & model</div>
+              <CarSearch value={data.vehicleType} onChange={(v) => set('vehicleType', v)} onSelect={(v) => set('vehicleType', v)} />
+            </div>
+
+            <div className="qw-section">
+              <div className="qw-slabel">What does it need?</div>
+              <div className="qw-grid">
+                {services.map((s) =>
+              <button key={s.title} type="button" className={'qw-tile' + (data.services.includes(s.title) ? ' sel' : '')}
+              onClick={() => toggleService(s.title)}>{s.title}</button>
+              )}
+                <button type="button" className={'qw-tile' + (data.services.includes('Not sure yet') ? ' sel' : '')}
+              onClick={() => toggleService('Not sure yet')}>Not sure — recommend</button>
+                <button type="button" className={'qw-tile' + (data.services.includes('Other') ? ' sel' : '')}
+              onClick={() => toggleService('Other')}>Other</button>
+              </div>
+              {data.services.includes('Other') &&
+            <div className="field" style={{ marginTop: 10 }}>
+                <input autoFocus value={data.serviceOther}
+              onChange={(e) => set('serviceOther', e.target.value)} placeholder="Tell us what you need" />
+              </div>}
+            </div>
+
+            <button type="button" className="btn btn-primary" disabled={!page0ok} onClick={next}
+          style={{ width: '100%', justifyContent: 'center', marginTop: 18, opacity: page0ok ? 1 : .4 }}>
               Continue <Icon.Arrow />
             </button>
-          </form>}
+          </div>}
 
+        {/* ── Page 2 · Photos + location ── */}
         {step === 1 &&
         <div>
-            <h4 className="display" style={{ fontSize: 22, margin: '0 0 16px' }}>What does it need?</h4>
-            <div className="qw-grid">
-              {services.map((s) =>
-            <button key={s.title} type="button"
-            className={'qw-tile' + (data.services.includes(s.title) ? ' sel' : '')}
-            onClick={() => toggleService(s.title)}>
-                  {s.title}
-                </button>
-            )}
-              <button type="button"
-            className={'qw-tile' + (data.services.includes('Not sure yet') ? ' sel' : '')}
-            onClick={() => toggleService('Not sure yet')}>
-                Not sure — recommend
-              </button>
-              <button type="button"
-            className={'qw-tile' + (data.services.includes('Other') ? ' sel' : '')}
-            onClick={() => toggleService('Other')}>
-                Other
-              </button>
+            <h4 className="display" style={{ fontSize: 18, margin: '0 0 14px' }}>Photos &amp; location</h4>
+
+            <div className="qw-section">
+              <div className="qw-slabel">Photos <span style={{ textTransform: 'none', fontWeight: 600, color: '#9AA8BC' }}>· optional</span></div>
+              <div className="qw-photozones">
+                {PhotoZone('Exterior', <VehicleGlyph.Sedan />)}
+                {PhotoZone('Interior', <Icon.Seat />)}
+              </div>
             </div>
-            {data.services.includes('Other') &&
-          <div className="field" style={{ marginTop: 12 }}>
-              <label>What do you need?</label>
-              <input autoFocus value={data.serviceOther}
-            onChange={(e) => set('serviceOther', e.target.value)} placeholder="Tell us what you need" />
-            </div>}
-            <button type="button" className="btn btn-primary" disabled={data.services.length === 0}
-          onClick={next}
-          style={{ width: '100%', justifyContent: 'center', marginTop: 16, opacity: data.services.length === 0 ? .4 : 1 }}>
+
+            <div className="qw-section">
+              <div className="qw-slabel">Where's the car?</div>
+              <AddressField value={data.area} onChange={(v) => set('area', v)} onSelect={(v) => set('area', v)} />
+            </div>
+
+            <button type="button" className="btn btn-primary" disabled={!page1ok} onClick={next}
+          style={{ width: '100%', justifyContent: 'center', marginTop: 18, opacity: page1ok ? 1 : .4 }}>
               Continue <Icon.Arrow />
             </button>
           </div>}
 
+        {/* ── Page 3 · Your details + confirm ── */}
         {step === 2 &&
-        <div>
-            <h4 className="display" style={{ fontSize: 22, margin: '0 0 16px' }}>How dirty is it, 1 to 10?</h4>
-            <div className="qw-scale">
-              {Array.from({ length: 10 }, (_, i) => i + 1).map((n) =>
-            <button key={n} type="button"
-            className={'qw-scale-btn' + (data.dirt >= n ? ' on' : '') + (data.dirt === n ? ' sel' : '')}
-            onClick={() => pickCondition('dirt', n)}>
-                  {n}
-                </button>
-            )}
-            </div>
-            <div style={{
-          textAlign: 'center', marginTop: 10, minHeight: 20,
-          fontWeight: 800, fontSize: 14,
-          color: data.dirt ? '#1E5BC6' : '#5B6B82'
-        }}>
-              {data.dirt ? data.dirt + '/10 — ' + dirtLabel(data.dirt) : ' '}
-            </div>
-            <div className="qw-mini-label">Pet hair?</div>
-            <div className="qw-grid">
-              {['Yes', 'No'].map((v) =>
-            <button key={v} type="button"
-            className={'qw-tile' + (data.petHair === v ? ' sel' : '')}
-            onClick={() => pickCondition('petHair', v)}>
-                  {v}
-                </button>
-            )}
-            </div>
-          </div>}
-
-        {step === 3 &&
-        <div>
-            <h4 className="display" style={{ fontSize: 22, margin: '0 0 16px' }}>Add photos of the car?</h4>
-            <div className="qw-photos">
-              {data.photos.map((p) =>
-            <div key={p.url} className="qw-thumb">
-                  <img src={p.url} alt="Car photo" />
-                  <button type="button" onClick={() => removePhoto(p.url)}>×</button>
-                </div>
-            )}
-              {data.photos.length < 3 &&
-            <label className="qw-add">
-                  <input type="file" accept="image/*" multiple style={{ display: 'none' }}
-              onChange={(e) => {addPhotos(e.target.files);e.target.value = '';}} />
-                  + Add
-                </label>}
-            </div>
-            <button type="button" className="btn btn-primary" onClick={next}
-          style={{ width: '100%', justifyContent: 'center', marginTop: 16 }}>
-              {data.photos.length > 0 ? 'Continue' : 'Skip'} <Icon.Arrow />
-            </button>
-          </div>}
-
-        {step === 4 &&
-        <div>
-            <h4 className="display" style={{ fontSize: 22, margin: '0 0 4px' }}>Which days work?</h4>
-            <p style={{ color: '#5B6B82', fontSize: 13, margin: '0 0 14px' }}>Pick up to 3 — backups help if your first day is taken.</p>
-            <QuoteCalendar selected={data.dates} onToggle={(day) => {
-          setData((d) => {
-            const dates = d.dates.filter((x) => x !== 'Any day');
-            if (dates.includes(day)) return { ...d, dates: dates.filter((x) => x !== day) };
-            if (dates.length >= 3) return { ...d, dates };
-            return { ...d, dates: [...dates, day] };
-          });
-        }} />
-            <button type="button" className="btn btn-primary" disabled={data.dates.length === 0}
-          onClick={next}
-          style={{ width: '100%', justifyContent: 'center', marginTop: 16, opacity: data.dates.length === 0 ? .4 : 1 }}>
-              Continue <Icon.Arrow />
-            </button>
-            <div style={{ textAlign: 'center', marginTop: 10 }}>
-              <button type="button" className="qw-back"
-            onClick={() => pick('dates', ['Any day'])}>
-                I'm flexible — any day works
-              </button>
-            </div>
-          </div>}
-
-        {step === 5 &&
-        <div>
-            <h4 className="display" style={{ fontSize: 22, margin: '0 0 16px' }}>What time of day?</h4>
-            <div className="qw-grid">
-              {TIME_SLOTS.map((t) =>
-            <button key={t} type="button"
-            className={'qw-tile' + (data.timeSlot === t ? ' sel' : '')}
-            style={t === 'Any time' ? { gridColumn: '1 / -1' } : undefined}
-            onClick={() => pick('timeSlot', t)}>
-                  {t}
-                </button>
-            )}
-            </div>
-          </div>}
-
-        {step === 6 &&
-        <form onSubmit={(e) => {e.preventDefault();if (data.area.trim()) next();}}>
-            <h4 className="display" style={{ fontSize: 22, margin: '0 0 16px' }}>Where's the vehicle?</h4>
-            <AddressField value={data.area}
-          onChange={(v) => set('area', v)}
-          onSelect={(v) => pick('area', v)} />
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 16 }}>
-              Continue <Icon.Arrow />
-            </button>
-          </form>}
-
-        {step === 7 &&
-        <form onSubmit={(e) => {e.preventDefault();if (validateContact()) next();}}>
-            <h4 className="display" style={{ fontSize: 22, margin: '0 0 16px' }}>How do we reach you?</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <form onSubmit={(e) => {e.preventDefault();if (validateContact()) send();}}>
+            <h4 className="display" style={{ fontSize: 18, margin: '0 0 14px' }}>Your details</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div className="field">
                 <label>Your name</label>
                 <input required autoFocus value={data.name}
@@ -2792,46 +2721,30 @@ const QuoteForm = ({ onBook }) => {
                 {errors.email && <p className="qw-err">{errors.email}</p>}
               </div>
             </div>
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 16 }}>
-              Continue <Icon.Arrow />
-            </button>
-            <p style={{ fontSize: 12, color: '#5B6B82', margin: '10px 0 0', textAlign: 'center' }}>
-              No spam. We text you to confirm details.
-            </p>
-          </form>}
 
-        {step === 8 &&
-        <div>
-            <h4 className="display" style={{ fontSize: 22, margin: '0 0 16px' }}>Everything correct?</h4>
-            <div className="qw-review">
+            <div className="qw-review" style={{ marginTop: 16 }}>
               {[
-            ['Vehicle', data.vehicleType, 0],
-            ['Services', serviceList().join(', '), 1],
-            ['Condition', conditionText(), 2],
-            ['Photos', data.photos.length > 0 ? data.photos.length + ' attached' : 'None', 3],
-            ['Days', data.dates.join(' / '), 4],
-            ['Time', data.timeSlot, 5],
-            ['Address', data.area, 6],
-            ['Name', data.name.trim(), 7],
-            ['Phone', formatPhone(data.phone), 7],
-            ['Email', data.email.trim() || '—', 7]].
-            map(([k, v, idx]) =>
-            <button key={k} type="button" className="qw-review-row" onClick={() => editStep(idx)}>
+            ['Vehicle', data.vehicleType],
+            ['Services', serviceList().join(', ')],
+            ['Photos', data.photos.length > 0 ? data.photos.length + ' attached' : 'None'],
+            ['Location', data.area]].
+            filter(([, v]) => v).map(([k, v]) =>
+            <div key={k} className="qw-review-row">
                   <span className="k">{k}</span>
-                  <span className="v">{v}</span>
-                  <svg className="e" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18 L15 12 L9 6" /></svg>
-                </button>
+                  <span className="v" style={{ textAlign: 'right', fontWeight: 700 }}>{v}</span>
+                </div>
             )}
             </div>
+
             {status === 'error' &&
           <p style={{ fontSize: 13, color: '#C0392B', margin: '12px 0 0' }}>
-                Something went wrong sending your request. Try again, or call us at <a href={PHONE_HREF} style={{ fontWeight: 700, textDecoration: 'underline' }}>{PHONE}</a>.
+                Something went wrong. Try again, or call us at <a href={PHONE_HREF} style={{ fontWeight: 700, textDecoration: 'underline' }}>{PHONE}</a>.
               </p>}
-            <button type="button" className="btn btn-primary" disabled={status === 'sending'} onClick={send}
+            <button type="submit" className="btn btn-primary" disabled={status === 'sending'}
           style={{ width: '100%', justifyContent: 'center', marginTop: 16, opacity: status === 'sending' ? .6 : 1 }}>
-              {status === 'sending' ? 'Sending…' : <>OK — send my request <Icon.Arrow /></>}
+              {status === 'sending' ? 'Sending…' : <>Send my request <Icon.Arrow /></>}
             </button>
-          </div>}
+          </form>}
       </div>
 
       {/* Footer: back */}
@@ -2871,15 +2784,15 @@ const QuoteModal = ({ open, onClose }) => {
         }
       `}</style>
       <div className="modal qm-sheet" onClick={(e) => e.stopPropagation()}>
-        <div style={{ padding: 'clamp(20px, 5vw, 32px)', position: 'relative' }}>
+        <div style={{ padding: 'clamp(16px, 4vw, 24px)', position: 'relative' }}>
           <button type="button" onClick={onClose} aria-label="Close" style={{
-            position: 'absolute', top: 14, right: 14, width: 36, height: 36,
+            position: 'absolute', top: 12, right: 12, width: 32, height: 32,
             display: 'grid', placeItems: 'center', borderRadius: '50%',
             background: 'var(--paper)', color: 'var(--ink)',
-            fontSize: 20, lineHeight: 1, cursor: 'pointer'
+            fontSize: 18, lineHeight: 1, cursor: 'pointer'
           }}>×</button>
-          <div className="eyebrow" style={{ marginBottom: 6 }}>Request a quote</div>
-          <h3 className="display" style={{ fontSize: 26, margin: '0 0 20px' }}>Get on the schedule.</h3>
+          <div className="eyebrow" style={{ marginBottom: 4, fontSize: 11 }}>Request a quote</div>
+          <h3 className="display" style={{ fontSize: 20, margin: '0 0 16px' }}>Get on the schedule.</h3>
           <QuoteForm />
         </div>
       </div>
