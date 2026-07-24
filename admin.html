@@ -104,12 +104,28 @@
   <!-- Login -->
   <div id="loginView" class="login hidden">
     <h2>Sign in</h2>
-    <p>Enter the business email and we'll send you a one-time login link. No password needed.</p>
-    <div class="field">
-      <label>Email</label>
-      <input id="emailInput" type="email" placeholder="you@example.com" autocomplete="email" />
+
+    <!-- Step 1: enter email -->
+    <div id="step1">
+      <p>Enter the business email. We'll send you a 6-digit code to sign in — no password needed.</p>
+      <div class="field">
+        <label>Email</label>
+        <input id="emailInput" type="email" placeholder="you@example.com" autocomplete="email" inputmode="email" />
+      </div>
+      <button id="sendCodeBtn" class="btn btn-primary" style="width:100%;margin-top:16px;">Send code</button>
     </div>
-    <button id="sendLinkBtn" class="btn btn-primary" style="width:100%;margin-top:16px;">Send login link</button>
+
+    <!-- Step 2: enter the code -->
+    <div id="step2" class="hidden">
+      <p>We sent a 6-digit code to <b id="sentTo"></b>. Enter it below.</p>
+      <div class="field">
+        <label>6-digit code</label>
+        <input id="codeInput" type="text" placeholder="123456" inputmode="numeric" autocomplete="one-time-code" maxlength="6" style="letter-spacing:.3em;font-size:20px;text-align:center;" />
+      </div>
+      <button id="verifyBtn" class="btn btn-primary" style="width:100%;margin-top:16px;">Sign in</button>
+      <button id="backBtn" class="btn btn-ghost" style="width:100%;margin-top:10px;">Use a different email</button>
+    </div>
+
     <div id="loginMsg"></div>
   </div>
 
@@ -151,10 +167,12 @@
   }
 
   // ---- Views ----
+  var pendingEmail = '';
   function showLogin(msg, kind) {
     hide('loadingView'); hide('dashView'); hide('logoutBtn'); show('loginView');
+    show('step1'); hide('step2');
     el('whoami').textContent = 'Dashboard';
-    if (msg) el('loginMsg').innerHTML = '<div class="note ' + (kind || 'ok') + '">' + esc(msg) + '</div>';
+    el('loginMsg').innerHTML = msg ? '<div class="note ' + (kind || 'ok') + '">' + esc(msg) + '</div>' : '';
   }
   function showLoading() { hide('loginView'); hide('dashView'); show('loadingView'); }
   function showDash(email) {
@@ -162,25 +180,43 @@
     el('whoami').textContent = email || 'Signed in';
   }
 
-  // ---- Auth ----
-  el('sendLinkBtn').addEventListener('click', async function () {
+  // ---- Auth (email + 6-digit code) ----
+  el('sendCodeBtn').addEventListener('click', async function () {
     var email = el('emailInput').value.trim();
     if (!email) return;
-    el('sendLinkBtn').disabled = true;
-    el('sendLinkBtn').textContent = 'Sending…';
-    var res = await supa.auth.signInWithOtp({
-      email: email,
-      options: { emailRedirectTo: 'https://aquamancompany.com/admin' }
-    });
-    el('sendLinkBtn').disabled = false;
-    el('sendLinkBtn').textContent = 'Send login link';
+    el('sendCodeBtn').disabled = true;
+    el('sendCodeBtn').textContent = 'Sending…';
+    var res = await supa.auth.signInWithOtp({ email: email, options: { shouldCreateUser: true, emailRedirectTo: 'https://aquamancompany.com/admin' } });
+    el('sendCodeBtn').disabled = false;
+    el('sendCodeBtn').textContent = 'Send code';
     if (res.error) {
       el('loginMsg').innerHTML = '<div class="note err">' + esc(res.error.message) + '</div>';
-    } else {
-      el('loginMsg').innerHTML = '<div class="note ok">Check your email — we sent a login link to <b>' + esc(email) + '</b>. Open it on this device to sign in.</div>';
+      return;
     }
+    pendingEmail = email;
+    el('sentTo').textContent = email;
+    el('loginMsg').innerHTML = '';
+    hide('step1'); show('step2');
+    el('codeInput').focus();
   });
-  el('emailInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') el('sendLinkBtn').click(); });
+
+  el('verifyBtn').addEventListener('click', async function () {
+    var token = el('codeInput').value.trim();
+    if (!token) return;
+    el('verifyBtn').disabled = true;
+    el('verifyBtn').textContent = 'Signing in…';
+    var res = await supa.auth.verifyOtp({ email: pendingEmail, token: token, type: 'email' });
+    el('verifyBtn').disabled = false;
+    el('verifyBtn').textContent = 'Sign in';
+    if (res.error) {
+      el('loginMsg').innerHTML = '<div class="note err">That code did not work. Check it and try again.</div>';
+    }
+    // success is handled by onAuthStateChange (SIGNED_IN)
+  });
+
+  el('backBtn').addEventListener('click', function () { showLogin(); });
+  el('emailInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') el('sendCodeBtn').click(); });
+  el('codeInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') el('verifyBtn').click(); });
 
   el('logoutBtn').addEventListener('click', async function () {
     await supa.auth.signOut();
