@@ -11,6 +11,19 @@ const EMAIL_HREF = 'mailto:Aquamancarwash2024@gmail.com';
 // FormSubmit alias for EMAIL — keeps the raw address out of the endpoint (anti-spam)
 const FORMSUBMIT_KEY = 'aeb0557bbd82ddc45043c725038993f6';
 
+// Supabase — leads are stored here and shown in the /admin dashboard.
+// The publishable key is safe to ship in the browser; row-level security
+// lets the public only INSERT, while only the owner login can read.
+const SUPABASE_URL = 'https://ywlqbzbuoxbqgiyxuqox.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_uZHkjrDop3GJDZHZiYO9aw_wBa91-bU';
+let _supaClient = null;
+const getSupabase = () => {
+  if (!_supaClient && window.supabase && window.supabase.createClient) {
+    _supaClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  }
+  return _supaClient;
+};
+
 /* ─────────── NAV ─────────── */
 
 const CircularLogo = () =>
@@ -2382,54 +2395,72 @@ const QuoteForm = ({ onBook }) => {
     return fields;
   };
 
+  // Store the lead in Supabase (the dashboard) — uploads photos, then inserts a row.
+  const saveToDatabase = async () => {
+    const supa = getSupabase();
+    if (!supa) return { ok: false, photoUrls: [] };
+    const photoUrls = [];
+    for (const p of data.photos) {
+      try {
+        const rand = window.crypto && window.crypto.randomUUID ?
+        window.crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2);
+        const path = rand + '.jpg';
+        const up = await supa.storage.from('lead-photos').upload(path, p.blob, { contentType: 'image/jpeg' });
+        if (!up.error) {
+          const pub = supa.storage.from('lead-photos').getPublicUrl(path);
+          if (pub.data && pub.data.publicUrl) photoUrls.push(pub.data.publicUrl);
+        }
+      } catch (err) {/* skip this photo, keep going */}
+    }
+    try {
+      const ins = await supa.from('leads').insert({
+        name: data.name.trim(),
+        phone: formatPhone(data.phone),
+        email: data.email.trim() || null,
+        vehicle: data.vehicleType,
+        services: serviceList().join(', '),
+        condition: conditionText(),
+        days: data.dates.join(' / '),
+        time_slot: data.timeSlot,
+        area: data.area,
+        photos: photoUrls
+      });
+      return { ok: !ins.error, photoUrls };
+    } catch (err) {
+      return { ok: false, photoUrls };
+    }
+  };
+
+  // Email the owner + Juan so they're pinged instantly (text only; photos live in the dashboard).
+  const emailNotify = async (photoCount) => {
+    const url = 'https://formsubmit.co/ajax/' + FORMSUBMIT_KEY;
+    const body = JSON.stringify({
+      ...leadFields(),
+      Photos: photoCount > 0 ? photoCount + ' photo(s) — see the dashboard' : 'None'
+    });
+    for (let i = 0; i < 2; i++) {
+      try {
+        const r = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body
+        });
+        if (r.ok) return true;
+      } catch (err) {/* retry */}
+      await new Promise((r) => setTimeout(r, 600 * (i + 1)));
+    }
+    return false;
+  };
+
   const send = async () => {
     setStatus('sending');
-    const url = 'https://formsubmit.co/ajax/' + FORMSUBMIT_KEY;
-
-    // FormSubmit occasionally returns a transient 500; retry a couple of times.
-    const postWithRetry = async (init, tries) => {
-      for (let i = 0; i < tries; i++) {
-        try {
-          const r = await fetch(url, init);
-          if (r.ok) return r;
-        } catch (err) {/* network hiccup — retry */}
-        await new Promise((r) => setTimeout(r, 700 * (i + 1)));
-      }
-      return null;
-    };
-
-    const jsonInit = (extra) => ({
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ ...leadFields(), ...extra })
-    });
-
-    try {
-      let res = null;
-
-      // 1) Try to send with the photos attached (best effort).
-      if (data.photos.length > 0) {
-        const fd = new FormData();
-        Object.entries(leadFields()).forEach(([k, v]) => fd.append(k, v));
-        // FormSubmit expects the file field named "attachment".
-        data.photos.forEach((p) => fd.append('attachment', p.blob, p.name));
-        res = await postWithRetry({ method: 'POST', headers: { Accept: 'application/json' }, body: fd }, 2);
-      }
-
-      // 2) If there were no photos, or the attachment upload failed, deliver the
-      //    lead as JSON so the request is never lost.
-      if (!res) {
-        res = await postWithRetry(
-          jsonInit({ Photos: data.photos.length > 0 ?
-          data.photos.length + ' photo(s) — ask the customer to text them' : 'None' }),
-          3);
-      }
-
-      if (!res) throw new Error('send failed');
-      setStatus('sent');
-    } catch (err) {
-      setStatus('error');
-    }
+    // Primary: store the lead (+ photos) in the dashboard database.
+    const db = await saveToDatabase();
+    // Secondary: notify by email. Runs regardless so the owner is pinged.
+    const emailed = await emailNotify(db.photoUrls.length);
+    // The request is safe if it landed anywhere.
+    if (db.ok || emailed) setStatus('sent');
+    else setStatus('error');
   };
 
   const reset = () => {

@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Aquaman — Leads Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --ink: #0B1A2E; --ink-2: #0F2540; --blue: #1E5BC6; --blue-bright: #2F7BFF;
+    --line: rgba(255,255,255,.10); --line-2: rgba(255,255,255,.16);
+    --paper: #0A1420; --card: #101F33; --card-2: #16283f;
+    --text: #EAF0F8; --muted: #8CA0BC;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    background: var(--paper); color: var(--text);
+    -webkit-font-smoothing: antialiased; min-height: 100vh;
+  }
+  a { color: var(--blue-bright); text-decoration: none; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 24px 20px 80px; }
+
+  /* Header */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo { width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #2F7BFF, #1E5BC6); display: grid; place-items: center; font-weight: 800; }
+  .brand h1 { font-size: 18px; margin: 0; letter-spacing: -.02em; }
+  .brand p { margin: 0; font-size: 12px; color: var(--muted); }
+  .btn { font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer; border: none; border-radius: 999px; padding: 11px 20px; transition: transform .12s ease, background .18s ease, opacity .18s ease; }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: var(--blue); color: #fff; }
+  .btn-primary:hover { background: var(--blue-bright); }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--line-2); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--blue); }
+
+  /* Login card */
+  .login { max-width: 420px; margin: 12vh auto 0; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 32px; }
+  .login h2 { margin: 0 0 6px; font-size: 24px; letter-spacing: -.02em; }
+  .login p { margin: 0 0 20px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+  .field label { display: block; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .field input { width: 100%; font-family: inherit; font-size: 15px; color: var(--text); padding: 13px 15px; border: 1px solid var(--line-2); background: #0c1826; border-radius: 8px; }
+  .field input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 4px rgba(30,91,198,.18); }
+  .note { font-size: 13px; margin-top: 14px; padding: 12px 14px; border-radius: 8px; line-height: 1.5; }
+  .note.ok { background: rgba(30,91,198,.14); border: 1px solid rgba(47,123,255,.35); color: #cfe0ff; }
+  .note.err { background: rgba(192,57,43,.14); border: 1px solid rgba(192,57,43,.4); color: #ffd0ca; }
+
+  /* Stats + toolbar */
+  .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .count { font-size: 14px; color: var(--muted); }
+  .count b { color: var(--text); font-size: 22px; }
+  .search { flex: 1; min-width: 200px; max-width: 320px; }
+  .search input { width: 100%; font-family: inherit; font-size: 14px; color: var(--text); padding: 10px 14px; border: 1px solid var(--line-2); background: var(--card); border-radius: 999px; }
+  .search input:focus { outline: none; border-color: var(--blue); }
+
+  /* Lead cards */
+  .leads { display: grid; gap: 12px; }
+  .lead { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; transition: border-color .15s ease; }
+  .lead:hover { border-color: var(--line-2); }
+  .lead.done { opacity: .55; }
+  .lead-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .lead-name { font-size: 17px; font-weight: 800; letter-spacing: -.01em; }
+  .lead-when { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .lead-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .icon-btn { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--line-2); background: transparent; color: var(--muted); cursor: pointer; display: grid; place-items: center; font-size: 15px; }
+  .icon-btn:hover { color: var(--text); border-color: var(--blue); }
+  .badge { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; padding: 4px 9px; border-radius: 999px; }
+  .badge.new { background: rgba(47,123,255,.18); color: #7fb0ff; }
+  .badge.contacted { background: rgba(120,200,140,.16); color: #8fe0a8; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 18px; }
+  .cell .k { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+  .cell .v { font-size: 14px; font-weight: 600; word-break: break-word; }
+  .contact-row { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 12px; }
+  .contact-row a { font-weight: 700; }
+  .photos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .photos img { width: 78px; height: 78px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line-2); cursor: pointer; }
+
+  .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .spinner { width: 34px; height: 34px; border: 3px solid var(--line-2); border-top-color: var(--blue-bright); border-radius: 50%; animation: spin .8s linear infinite; margin: 60px auto; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <div class="logo">A</div>
+      <div>
+        <h1>Aquaman — Leads</h1>
+        <p id="whoami">Dashboard</p>
+      </div>
+    </div>
+    <button id="logoutBtn" class="btn btn-ghost hidden">Log out</button>
+  </div>
+
+  <!-- Login -->
+  <div id="loginView" class="login hidden">
+    <h2>Sign in</h2>
+    <p>Enter the business email and we'll send you a one-time login link. No password needed.</p>
+    <div class="field">
+      <label>Email</label>
+      <input id="emailInput" type="email" placeholder="you@example.com" autocomplete="email" />
+    </div>
+    <button id="sendLinkBtn" class="btn btn-primary" style="width:100%;margin-top:16px;">Send login link</button>
+    <div id="loginMsg"></div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loadingView" class="hidden"><div class="spinner"></div></div>
+
+  <!-- Dashboard -->
+  <div id="dashView" class="hidden">
+    <div class="toolbar">
+      <div class="count"><b id="leadCount">0</b> total requests</div>
+      <div class="search"><input id="searchInput" type="search" placeholder="Search name, phone, vehicle…" /></div>
+    </div>
+    <div id="leads" class="leads"></div>
+    <div id="emptyState" class="empty hidden">No requests yet. They'll appear here the moment someone completes the quote form.</div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var SUPABASE_URL = 'https://ywlqbzbuoxbqgiyxuqox.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_uZHkjrDop3GJDZHZiYO9aw_wBa91-bU';
+  var supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  var allLeads = [];
+
+  var el = function (id) { return document.getElementById(id); };
+  var show = function (id) { el(id).classList.remove('hidden'); };
+  var hide = function (id) { el(id).classList.add('hidden'); };
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+  function fmtDate(iso) {
+    try {
+      var d = new Date(iso);
+      return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    } catch (e) { return iso; }
+  }
+
+  // ---- Views ----
+  function showLogin(msg, kind) {
+    hide('loadingView'); hide('dashView'); hide('logoutBtn'); show('loginView');
+    el('whoami').textContent = 'Dashboard';
+    if (msg) el('loginMsg').innerHTML = '<div class="note ' + (kind || 'ok') + '">' + esc(msg) + '</div>';
+  }
+  function showLoading() { hide('loginView'); hide('dashView'); show('loadingView'); }
+  function showDash(email) {
+    hide('loginView'); hide('loadingView'); show('dashView'); show('logoutBtn');
+    el('whoami').textContent = email || 'Signed in';
+  }
+
+  // ---- Auth ----
+  el('sendLinkBtn').addEventListener('click', async function () {
+    var email = el('emailInput').value.trim();
+    if (!email) return;
+    el('sendLinkBtn').disabled = true;
+    el('sendLinkBtn').textContent = 'Sending…';
+    var res = await supa.auth.signInWithOtp({
+      email: email,
+      options: { emailRedirectTo: 'https://aquamancompany.com/admin' }
+    });
+    el('sendLinkBtn').disabled = false;
+    el('sendLinkBtn').textContent = 'Send login link';
+    if (res.error) {
+      el('loginMsg').innerHTML = '<div class="note err">' + esc(res.error.message) + '</div>';
+    } else {
+      el('loginMsg').innerHTML = '<div class="note ok">Check your email — we sent a login link to <b>' + esc(email) + '</b>. Open it on this device to sign in.</div>';
+    }
+  });
+  el('emailInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') el('sendLinkBtn').click(); });
+
+  el('logoutBtn').addEventListener('click', async function () {
+    await supa.auth.signOut();
+    showLogin();
+  });
+
+  // ---- Data ----
+  async function loadLeads(email) {
+    showLoading();
+    var res = await supa.from('leads').select('*').order('created_at', { ascending: false });
+    if (res.error) {
+      showLogin('This account is not allowed to view the dashboard. Sign in with the business email.', 'err');
+      await supa.auth.signOut();
+      return;
+    }
+    allLeads = res.data || [];
+    showDash(email);
+    render(allLeads);
+  }
+
+  function leadCard(l) {
+    var photos = (l.photos || []).map(function (u) {
+      return '<img src="' + esc(u) + '" onclick="window.open(this.src)" alt="car photo" />';
+    }).join('');
+    var cell = function (k, v) {
+      if (!v) return '';
+      return '<div class="cell"><div class="k">' + k + '</div><div class="v">' + esc(v) + '</div></div>';
+    };
+    var done = l.status === 'contacted';
+    return '' +
+      '<div class="lead' + (done ? ' done' : '') + '">' +
+        '<div class="lead-head">' +
+          '<div><div class="lead-name">' + esc(l.name || 'Unknown') + '</div>' +
+          '<div class="lead-when mono">' + fmtDate(l.created_at) + '</div></div>' +
+          '<div class="lead-actions">' +
+            '<span class="badge ' + (done ? 'contacted' : 'new') + '">' + (done ? 'Contacted' : 'New') + '</span>' +
+            '<button class="icon-btn" title="' + (done ? 'Mark as new' : 'Mark contacted') + '" onclick="AQ.toggle(\'' + l.id + '\')">' + (done ? '↩' : '✓') + '</button>' +
+            '<button class="icon-btn" title="Delete" onclick="AQ.remove(\'' + l.id + '\')">🗑</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="contact-row">' +
+          (l.phone ? '<a href="tel:' + esc(l.phone.replace(/[^0-9+]/g, '')) + '">📞 ' + esc(l.phone) + '</a>' : '') +
+          (l.email ? '<a href="mailto:' + esc(l.email) + '">✉ ' + esc(l.email) + '</a>' : '') +
+        '</div>' +
+        '<div class="grid">' +
+          cell('Vehicle', l.vehicle) +
+          cell('Services', l.services) +
+          cell('Condition', l.condition) +
+          cell('Preferred days', l.days) +
+          cell('Time', l.time_slot) +
+          cell('Location', l.area) +
+        '</div>' +
+        (photos ? '<div class="photos">' + photos + '</div>' : '') +
+      '</div>';
+  }
+
+  function render(list) {
+    el('leadCount').textContent = list.length;
+    if (!list.length) { el('leads').innerHTML = ''; show('emptyState'); return; }
+    hide('emptyState');
+    el('leads').innerHTML = list.map(leadCard).join('');
+  }
+
+  el('searchInput').addEventListener('input', function (e) {
+    var q = e.target.value.toLowerCase().trim();
+    if (!q) return render(allLeads);
+    render(allLeads.filter(function (l) {
+      return [l.name, l.phone, l.email, l.vehicle, l.services, l.area].join(' ').toLowerCase().indexOf(q) !== -1;
+    }));
+  });
+
+  // Row actions (exposed for inline handlers)
+  window.AQ = {
+    toggle: async function (id) {
+      var l = allLeads.find(function (x) { return x.id === id; });
+      if (!l) return;
+      var next = l.status === 'contacted' ? 'new' : 'contacted';
+      var res = await supa.from('leads').update({ status: next }).eq('id', id);
+      if (!res.error) { l.status = next; render(currentList()); }
+    },
+    remove: async function (id) {
+      if (!confirm('Delete this request permanently?')) return;
+      var res = await supa.from('leads').delete().eq('id', id);
+      if (!res.error) { allLeads = allLeads.filter(function (x) { return x.id !== id; }); render(currentList()); }
+    }
+  };
+  function currentList() {
+    var q = el('searchInput').value.toLowerCase().trim();
+    if (!q) return allLeads;
+    return allLeads.filter(function (l) {
+      return [l.name, l.phone, l.email, l.vehicle, l.services, l.area].join(' ').toLowerCase().indexOf(q) !== -1;
+    });
+  }
+
+  // ---- Boot ----
+  supa.auth.getSession().then(function (res) {
+    var session = res.data && res.data.session;
+    if (session) loadLeads(session.user.email);
+    else showLogin();
+  });
+  supa.auth.onAuthStateChange(function (event, session) {
+    if (event === 'SIGNED_IN' && session) loadLeads(session.user.email);
+    if (event === 'SIGNED_OUT') showLogin();
+  });
+})();
+</script>
+</body>
+</html>
