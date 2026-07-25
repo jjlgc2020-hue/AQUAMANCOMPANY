@@ -108,6 +108,65 @@
   .src-badge { font-size: 10px; font-weight: 800; letter-spacing: .06em; padding: 3px 8px; border-radius: 999px;
     background: rgba(255,255,255,.07); color: var(--muted); text-transform: capitalize; }
 
+  /* Status accents + rejected badge */
+  .badge.rejected { background: rgba(220,90,80,.18); color: #ff9d94; }
+  .lead { cursor: pointer; }
+  .lead.done { opacity: 1; } /* legacy class — no longer dims */
+  .lead.sched { border-color: rgba(120,200,140,.38); }
+  .lead.rejected { opacity: .5; }
+
+  /* Filter bar */
+  .filters { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { font-family: inherit; font-size: 12px; font-weight: 700; color: var(--muted); background: var(--card);
+    border: 1px solid var(--line-2); border-radius: 999px; padding: 7px 13px; cursor: pointer; }
+  .chip:hover { color: var(--text); }
+  .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .selctl { font-family: inherit; font-size: 13px; color: var(--text); background: var(--card);
+    border: 1px solid var(--line-2); border-radius: 999px; padding: 8px 13px; cursor: pointer; }
+  .selctl:focus { outline: none; border-color: var(--blue); }
+
+  /* Detail modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(6,12,20,.72); z-index: 50;
+    display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 5vh 16px 40px; }
+  .detail { width: 100%; max-width: 560px; background: var(--card); border: 1px solid var(--line-2);
+    border-radius: 16px; padding: 22px; position: relative; }
+  .detail-close { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border-radius: 50%;
+    border: none; background: var(--card-2); color: var(--text); font-size: 18px; cursor: pointer; display: grid; place-items: center; }
+  .detail-head { display: flex; align-items: center; gap: 10px; margin: 0 40px 4px 0; }
+  .detail-head h3 { margin: 0; font-size: 22px; letter-spacing: -.02em; overflow-wrap: anywhere; }
+  .detail-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .gallery { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .gallery a { width: 84px; height: 84px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line-2); display: block; }
+  .gallery img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin-bottom: 18px; }
+  .info-item { min-width: 0; }
+  .info-item .k { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+  .info-item .v { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+  .info-item.full { grid-column: 1 / -1; }
+  .reject-box { background: rgba(220,90,80,.1); border: 1px solid rgba(220,90,80,.3); border-radius: 10px;
+    padding: 11px 13px; margin-bottom: 18px; font-size: 13px; color: #ffc9c3; }
+  .reject-box b { color: #ff9d94; }
+
+  /* Timeline */
+  .tl-title { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+  .tl { list-style: none; margin: 0 0 20px; padding: 0; }
+  .tl li { position: relative; padding: 0 0 14px 22px; }
+  .tl li:before { content: ''; position: absolute; left: 4px; top: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--blue-bright); }
+  .tl li:after { content: ''; position: absolute; left: 7.5px; top: 12px; bottom: 0; width: 1px; background: var(--line-2); }
+  .tl li:last-child { padding-bottom: 0; }
+  .tl li:last-child:after { display: none; }
+  .tl .tl-what { font-size: 13px; font-weight: 600; }
+  .tl .tl-when { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+  /* Detail actions */
+  .detail-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .detail-actions .btn { padding: 10px 16px; font-size: 13px; }
+  .btn-approve { background: rgba(120,200,140,.16); color: #8fe0a8; }
+  .btn-approve:hover { background: rgba(120,200,140,.26); }
+  .btn-reject { background: rgba(220,90,80,.14); color: #ff9d94; }
+  .btn-reject:hover { background: rgba(220,90,80,.24); }
+
   .hidden { display: none !important; }
 </style>
 </head>
@@ -171,12 +230,28 @@
     </div>
 
     <div class="toolbar">
-      <div class="count"><b id="leadCount">0</b> total requests</div>
+      <div class="count"><b id="leadCount">0</b> <span id="countLabel">total requests</span></div>
       <div class="search"><input id="searchInput" type="search" placeholder="Search name, phone, vehicle…" /></div>
     </div>
+    <div class="filters">
+      <div class="chips" id="statusChips">
+        <button class="chip on" data-status="all">All</button>
+        <button class="chip" data-status="new">New</button>
+        <button class="chip" data-status="scheduled">Scheduled</button>
+        <button class="chip" data-status="rejected">Rejected</button>
+      </div>
+      <select id="channelFilter" class="selctl"><option value="all">All channels</option></select>
+      <select id="sortBy" class="selctl">
+        <option value="recent">Newest first</option>
+        <option value="requested">Requested date</option>
+      </select>
+    </div>
     <div id="leads" class="leads"></div>
-    <div id="emptyState" class="empty hidden">No requests yet. They'll appear here the moment someone completes the quote form.</div>
+    <div id="emptyState" class="empty hidden">No requests match. Clear the filters or wait for the next quote request.</div>
   </div>
+
+  <!-- Lead detail modal (populated dynamically) -->
+  <div id="detailModal" class="modal-overlay hidden"></div>
 </div>
 
 <script>
@@ -289,6 +364,27 @@
     a.href = img.src; a.download = 'aquaman-booking-qr.gif'; a.click();
   });
 
+  // ---- Shared helpers ----
+  var SRC_MAP = { facebook: '📘 Facebook', instagram: '📸 Instagram', telefono: '📞 Phone', phone: '📞 Phone', whatsapp: '💬 WhatsApp', sms: '💬 SMS', qr: '▦ QR', web: '🌐 Web' };
+  function srcKey(l) { return (l.source || 'web').toLowerCase(); }
+  function srcLabel(s) { s = (s || 'web').toLowerCase(); return SRC_MAP[s] || s; }
+  function statusOf(l) {
+    var s = l.status || 'new';
+    // Only 'scheduled' and 'rejected' are real states; anything else (incl. legacy 'contacted') is New.
+    return (s === 'scheduled' || s === 'rejected') ? s : 'new';
+  }
+  function statusMeta(s) {
+    if (s === 'scheduled') return { cls: 'scheduled', label: '✓ Scheduled' };
+    if (s === 'rejected') return { cls: 'rejected', label: '✕ Rejected' };
+    return { cls: 'new', label: 'New' };
+  }
+  function whenText(l) { return [l.days, l.time_slot].filter(Boolean).join(' · '); }
+  function nowISO() { return new Date().toISOString(); }
+  function find(id) { return allLeads.find(function (x) { return x.id === id; }); }
+  function telHref(p) { return 'tel:' + String(p || '').replace(/[^0-9+]/g, ''); }
+  // Only allow http(s) photo URLs (defense-in-depth: photos come from a public table anon can insert into).
+  function safeUrl(u) { u = String(u || ''); return /^https?:\/\//i.test(u) ? u : '#'; }
+
   // ---- Data ----
   async function loadLeads(email) {
     showLoading();
@@ -300,45 +396,51 @@
     }
     allLeads = res.data || [];
     showDash(email);
-    render(allLeads);
+    populateChannels();
+    render(currentList());
   }
 
   function leadCard(l) {
-    var sched = l.status === 'scheduled';
-    var srcMap = { facebook: '📘 Facebook', instagram: '📸 Instagram', telefono: '📞 Phone', phone: '📞 Phone', whatsapp: '💬 WhatsApp', qr: '▦ QR', web: '🌐 Web' };
-    var src = (l.source || 'web').toLowerCase();
+    var s = statusOf(l);
+    var meta = statusMeta(s);
     var photos = l.photos || [];
     var thumb = photos.length
-      ? '<div class="lead-thumb" onclick="window.open(\'' + esc(photos[0]) + '\')"><img src="' + esc(photos[0]) + '" alt="car" />'
+      ? '<div class="lead-thumb"><img src="' + esc(safeUrl(photos[0])) + '" alt="car" />'
         + (photos.length > 1 ? '<span class="thumb-more">+' + (photos.length - 1) + '</span>' : '') + '</div>'
       : '<div class="lead-thumb lead-thumb--empty">🚗</div>';
     var line = function (icon, val) {
       return val ? '<div class="lead-line"><span class="li">' + icon + '</span><span>' + esc(val) + '</span></div>' : '';
     };
     var vehLine = [l.vehicle, l.services].filter(Boolean).join(' · ');
-    var when = [l.days, l.time_slot].filter(Boolean).join(' · ');
+    var when = whenText(l);
     var whenLine = when
       ? '<div class="lead-line"><span class="li">🗓</span><span>' + esc(when)
-          + '<span style="opacity:.6"> · ' + (sched ? 'confirmed' : 'requested') + '</span></span></div>'
+          + '<span style="opacity:.6"> · ' + (s === 'scheduled' ? 'confirmed' : 'requested') + '</span></span></div>'
       : '';
+    // Quick actions on the card (rejected leads only keep Delete)
+    var actions = '';
+    if (s !== 'rejected') {
+      actions += '<button class="icon-btn" title="' + (s === 'scheduled' ? 'Set back to New' : 'Approve the requested time') + '" onclick="event.stopPropagation();AQ.toggle(\'' + l.id + '\')">' + (s === 'scheduled' ? '↩' : '✓') + '</button>';
+      actions += '<button class="icon-btn" title="Change the time" onclick="event.stopPropagation();AQ.changeTime(\'' + l.id + '\')">🕑</button>';
+    }
+    actions += '<button class="icon-btn" title="Delete" onclick="event.stopPropagation();AQ.remove(\'' + l.id + '\')">🗑</button>';
+    var cardCls = 'lead' + (s === 'scheduled' ? ' sched' : '') + (s === 'rejected' ? ' rejected' : '');
     return '' +
-      '<div class="lead' + (sched ? ' done' : '') + '">' +
+      '<div class="' + cardCls + '" onclick="AQ.open(\'' + l.id + '\')">' +
         '<div class="lead-body">' +
           thumb +
           '<div class="lead-main">' +
             '<div class="lead-top">' +
               '<div class="lead-name">' + esc(l.name || 'Unknown') + '</div>' +
               '<div class="lead-actions">' +
-                '<span class="badge ' + (sched ? 'scheduled' : 'new') + '">' + (sched ? '✓ Scheduled' : 'New') + '</span>' +
-                '<button class="icon-btn" title="' + (sched ? 'Set back to New' : 'Approve the requested time') + '" onclick="AQ.toggle(\'' + l.id + '\')">' + (sched ? '↩' : '✓') + '</button>' +
-                '<button class="icon-btn" title="Change the time" onclick="AQ.changeTime(\'' + l.id + '\')">🕑</button>' +
-                '<button class="icon-btn" title="Delete" onclick="AQ.remove(\'' + l.id + '\')">🗑</button>' +
+                '<span class="badge ' + meta.cls + '">' + meta.label + '</span>' +
+                actions +
               '</div>' +
             '</div>' +
-            '<div class="lead-meta mono"><span class="src-badge">' + esc(srcMap[src] || src) + '</span> · ' + fmtDate(l.created_at) + '</div>' +
+            '<div class="lead-meta mono"><span class="src-badge">' + esc(srcLabel(srcKey(l))) + '</span> · ' + fmtDate(l.created_at) + '</div>' +
             '<div class="lead-contact">' +
-              (l.phone ? '<a href="tel:' + esc(l.phone.replace(/[^0-9+]/g, '')) + '">📞 ' + esc(l.phone) + '</a>' : '') +
-              (l.email ? '<a href="mailto:' + esc(l.email) + '">✉ ' + esc(l.email) + '</a>' : '') +
+              (l.phone ? '<a href="' + telHref(l.phone) + '" onclick="event.stopPropagation()">📞 ' + esc(l.phone) + '</a>' : '') +
+              (l.email ? '<a href="mailto:' + esc(l.email) + '" onclick="event.stopPropagation()">✉ ' + esc(l.email) + '</a>' : '') +
             '</div>' +
             line('🚗', vehLine) +
             line('📍', l.area) +
@@ -350,54 +452,208 @@
 
   function render(list) {
     el('leadCount').textContent = list.length;
+    var filtered = filterStatus !== 'all' || filterChannel !== 'all' || !!el('searchInput').value.trim();
+    el('countLabel').textContent = filtered ? 'shown' : 'total requests';
     if (!list.length) { el('leads').innerHTML = ''; show('emptyState'); return; }
     hide('emptyState');
     el('leads').innerHTML = list.map(leadCard).join('');
   }
 
-  el('searchInput').addEventListener('input', function (e) {
-    var q = e.target.value.toLowerCase().trim();
-    if (!q) return render(allLeads);
-    render(allLeads.filter(function (l) {
-      return [l.name, l.phone, l.email, l.vehicle, l.services, l.area].join(' ').toLowerCase().indexOf(q) !== -1;
-    }));
-  });
+  // ---- Detail modal + timeline ----
+  var openDetailId = null;
 
-  // Row actions (exposed for inline handlers)
+  function timelineHTML(l) {
+    var LBL = { scheduled: 'Time approved', reopened: 'Reopened (back to New)', rescheduled: 'Rescheduled', rejected: 'Rejected' };
+    var events = [{ t: l.created_at, what: 'Request received', via: srcLabel(srcKey(l)) }];
+    (l.history || []).forEach(function (h) {
+      events.push({ t: h.t, what: LBL[h.a] || h.a, via: h.d || '' });
+    });
+    events.sort(function (a, b) { return new Date(a.t) - new Date(b.t); });
+    return '<ul class="tl">' + events.map(function (e) {
+      return '<li><div class="tl-what">' + esc(e.what)
+        + (e.via ? ' <span style="color:var(--muted);font-weight:500">— ' + esc(e.via) + '</span>' : '')
+        + '</div><div class="tl-when mono">' + fmtDate(e.t) + '</div></li>';
+    }).join('') + '</ul>';
+  }
+
+  function detailHTML(l) {
+    var s = statusOf(l);
+    var meta = statusMeta(s);
+    var photos = l.photos || [];
+    var gallery = photos.length
+      ? '<div class="gallery">' + photos.map(function (p) {
+          var u = esc(safeUrl(p));
+          return '<a href="' + u + '" target="_blank" rel="noopener"><img src="' + u + '" alt="car" /></a>';
+        }).join('') + '</div>'
+      : '';
+    var when = whenText(l);
+    var info = function (k, v, full) {
+      return v ? '<div class="info-item' + (full ? ' full' : '') + '"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>' : '';
+    };
+    var infoGrid = '<div class="info-grid">' +
+      info('Phone', l.phone ? '<a href="' + telHref(l.phone) + '">' + esc(l.phone) + '</a>' : '') +
+      info('Email', l.email ? '<a href="mailto:' + esc(l.email) + '">' + esc(l.email) + '</a>' : '') +
+      info('Vehicle', esc(l.vehicle)) +
+      info('Services', esc(l.services)) +
+      info(s === 'scheduled' ? 'Confirmed time' : 'Requested time', when ? esc(when) : '') +
+      info('Channel', esc(srcLabel(srcKey(l)))) +
+      info('Location', esc(l.area), true) +
+      '</div>';
+    var rejectBox = (s === 'rejected' && l.reject_reason)
+      ? '<div class="reject-box"><b>Rejected:</b> ' + esc(l.reject_reason) + '</div>' : '';
+    var acts = '<div class="detail-actions">';
+    if (s === 'new') {
+      acts += '<button class="btn btn-approve" onclick="AQ.toggle(\'' + l.id + '\')">✓ Approve time</button>';
+      acts += '<button class="btn btn-ghost" onclick="AQ.changeTime(\'' + l.id + '\')">🕑 Reschedule</button>';
+      acts += '<button class="btn btn-reject" onclick="AQ.reject(\'' + l.id + '\')">✕ Reject</button>';
+    } else if (s === 'scheduled') {
+      acts += '<button class="btn btn-ghost" onclick="AQ.toggle(\'' + l.id + '\')">↩ Set back to New</button>';
+      acts += '<button class="btn btn-ghost" onclick="AQ.changeTime(\'' + l.id + '\')">🕑 Reschedule</button>';
+      acts += '<button class="btn btn-reject" onclick="AQ.reject(\'' + l.id + '\')">✕ Reject</button>';
+    } else if (s === 'rejected') {
+      acts += '<button class="btn btn-approve" onclick="AQ.reopen(\'' + l.id + '\')">↩ Reopen</button>';
+    }
+    acts += '<button class="btn btn-ghost" onclick="AQ.remove(\'' + l.id + '\')">🗑 Delete</button>';
+    acts += '</div>';
+    return '<div class="detail" onclick="event.stopPropagation()">' +
+      '<button class="detail-close" onclick="AQ.close()" aria-label="Close">×</button>' +
+      '<div class="detail-head"><h3>' + esc(l.name || 'Unknown') + '</h3><span class="badge ' + meta.cls + '">' + meta.label + '</span></div>' +
+      '<div class="detail-sub mono">' + fmtDate(l.created_at) + ' · ' + esc(srcLabel(srcKey(l))) + '</div>' +
+      gallery +
+      infoGrid +
+      rejectBox +
+      '<div class="tl-title">Timeline</div>' +
+      timelineHTML(l) +
+      acts +
+      '</div>';
+  }
+
+  function renderDetail() {
+    if (!openDetailId) { el('detailModal').classList.add('hidden'); el('detailModal').innerHTML = ''; return; }
+    var l = find(openDetailId);
+    if (!l) { openDetailId = null; el('detailModal').classList.add('hidden'); el('detailModal').innerHTML = ''; return; }
+    el('detailModal').innerHTML = detailHTML(l);
+    el('detailModal').classList.remove('hidden');
+  }
+
+  function refresh() { render(currentList()); renderDetail(); }
+
+  // Apply a status/field change: update DB (with a history entry), then local state.
+  async function applyChange(l, patch, event) {
+    var history = (l.history || []).slice();
+    if (event) history.push({ t: nowISO(), a: event.a, d: event.d || '' });
+    var payload = event ? Object.assign({}, patch, { history: history }) : patch;
+    var res = await supa.from('leads').update(payload).eq('id', l.id);
+    if (res.error) { alert('Could not save the change: ' + res.error.message); return false; }
+    Object.assign(l, patch);
+    if (event) l.history = history;
+    refresh();
+    return true;
+  }
+
+  // ---- Row / detail actions (exposed for inline handlers) ----
   window.AQ = {
-    // Approve the customer's requested time (or set it back to New).
-    toggle: async function (id) {
-      var l = allLeads.find(function (x) { return x.id === id; });
-      if (!l) return;
-      var next = l.status === 'scheduled' ? 'new' : 'scheduled';
-      var res = await supa.from('leads').update({ status: next }).eq('id', id);
-      if (!res.error) { l.status = next; render(currentList()); }
+    open: function (id) { openDetailId = id; renderDetail(); },
+    close: function () { openDetailId = null; renderDetail(); },
+    // Approve the requested time → scheduled, or set a scheduled lead back to New.
+    toggle: function (id) {
+      var l = find(id); if (!l) return;
+      if (statusOf(l) === 'scheduled') applyChange(l, { status: 'new' }, { a: 'reopened' });
+      else applyChange(l, { status: 'scheduled' }, { a: 'scheduled', d: whenText(l) });
     },
     // Change the appointment to a different day/time, then mark it scheduled.
-    changeTime: async function (id) {
-      var l = allLeads.find(function (x) { return x.id === id; });
-      if (!l) return;
+    changeTime: function (id) {
+      var l = find(id); if (!l) return;
       var day = prompt('Confirmed day (e.g. Fri, Jul 25):', l.days || '');
       if (day === null) return;
       var time = prompt('Confirmed time (e.g. 9:00 AM):', l.time_slot || '');
       if (time === null) return;
-      var patch = { days: day.trim() || null, time_slot: time.trim() || null, status: 'scheduled' };
-      var res = await supa.from('leads').update(patch).eq('id', id);
-      if (!res.error) { l.days = patch.days; l.time_slot = patch.time_slot; l.status = 'scheduled'; render(currentList()); }
+      var d = day.trim() || null, t = time.trim() || null;
+      applyChange(l, { days: d, time_slot: t, status: 'scheduled' },
+        { a: 'rescheduled', d: [d, t].filter(Boolean).join(' · ') });
+    },
+    // Reject with a mandatory reason.
+    reject: function (id) {
+      var l = find(id); if (!l) return;
+      var reason = prompt('Reason for rejecting this request (required):', l.reject_reason || '');
+      if (reason === null) return;
+      reason = reason.trim();
+      if (!reason) { alert('A reason is required to reject a request.'); return; }
+      applyChange(l, { status: 'rejected', reject_reason: reason }, { a: 'rejected', d: reason });
+    },
+    // Reopen a rejected lead back to New.
+    reopen: function (id) {
+      var l = find(id); if (!l) return;
+      applyChange(l, { status: 'new', reject_reason: null }, { a: 'reopened' });
     },
     remove: async function (id) {
       if (!confirm('Delete this request permanently?')) return;
       var res = await supa.from('leads').delete().eq('id', id);
-      if (!res.error) { allLeads = allLeads.filter(function (x) { return x.id !== id; }); render(currentList()); }
+      if (res.error) { alert('Could not delete: ' + res.error.message); return; }
+      allLeads = allLeads.filter(function (x) { return x.id !== id; });
+      if (openDetailId === id) openDetailId = null;
+      refresh();
     }
   };
+
+  // ---- Filters, sort & search ----
+  var filterStatus = 'all', filterChannel = 'all', sortMode = 'recent';
+
+  function reqSortKey(l) {
+    if (!l.days) return 8640000000000000; // no requested day → sort last
+    var s = String(l.days).replace(/^[A-Za-z]{3,},\s*/, ''); // drop weekday prefix
+    var year = new Date().getFullYear();
+    var t = new Date(s + ', ' + year).getTime();
+    if (isNaN(t)) return 8640000000000000;
+    // `days` carries no year; if it lands well in the past it's really next year's date.
+    if (t < Date.now() - 60 * 864e5) {
+      var nt = new Date(s + ', ' + (year + 1)).getTime();
+      if (!isNaN(nt)) t = nt;
+    }
+    return t;
+  }
+
   function currentList() {
     var q = el('searchInput').value.toLowerCase().trim();
-    if (!q) return allLeads;
-    return allLeads.filter(function (l) {
-      return [l.name, l.phone, l.email, l.vehicle, l.services, l.area].join(' ').toLowerCase().indexOf(q) !== -1;
+    var list = allLeads.filter(function (l) {
+      if (filterStatus !== 'all' && statusOf(l) !== filterStatus) return false;
+      if (filterChannel !== 'all' && srcLabel(srcKey(l)) !== filterChannel) return false;
+      if (q && [l.name, l.phone, l.email, l.vehicle, l.services, l.area].join(' ').toLowerCase().indexOf(q) === -1) return false;
+      return true;
     });
+    list = list.slice();
+    if (sortMode === 'requested') {
+      list.sort(function (a, b) { return reqSortKey(a) - reqSortKey(b) || (new Date(b.created_at) - new Date(a.created_at)); });
+    } else {
+      list.sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+    }
+    return list;
   }
+
+  function populateChannels() {
+    // Dedupe by display LABEL so aliases (e.g. 'phone' + 'telefono' → '📞 Phone') collapse into one option.
+    var seen = {};
+    allLeads.forEach(function (l) { seen[srcLabel(srcKey(l))] = true; });
+    var labels = Object.keys(seen).sort();
+    el('channelFilter').innerHTML = '<option value="all">All channels</option>' +
+      labels.map(function (s) { return '<option value="' + esc(s) + '">' + esc(s) + '</option>'; }).join('');
+    el('channelFilter').value = filterChannel;
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('#statusChips .chip'), function (c) {
+    c.addEventListener('click', function () {
+      filterStatus = c.getAttribute('data-status');
+      Array.prototype.forEach.call(document.querySelectorAll('#statusChips .chip'), function (x) {
+        x.classList.toggle('on', x === c);
+      });
+      render(currentList());
+    });
+  });
+  el('channelFilter').addEventListener('change', function (e) { filterChannel = e.target.value; render(currentList()); });
+  el('sortBy').addEventListener('change', function (e) { sortMode = e.target.value; render(currentList()); });
+  el('searchInput').addEventListener('input', function () { render(currentList()); });
+  el('detailModal').addEventListener('click', function () { AQ.close(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && openDetailId) AQ.close(); });
 
   // ---- Boot ----
   supa.auth.getSession().then(function (res) {
