@@ -80,6 +80,7 @@
   .badge { font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 4px 8px; border-radius: 999px; }
   .badge.new { background: rgba(47,123,255,.18); color: #7fb0ff; }
   .badge.contacted { background: rgba(120,200,140,.16); color: #8fe0a8; }
+  .badge.scheduled { background: rgba(120,200,140,.2); color: #8fe0a8; }
   .lead-meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
   .lead-contact { display: flex; gap: 14px; flex-wrap: wrap; margin: 8px 0 6px; font-size: 13px; }
   .lead-contact a { font-weight: 700; }
@@ -303,7 +304,7 @@
   }
 
   function leadCard(l) {
-    var done = l.status === 'contacted';
+    var sched = l.status === 'scheduled';
     var srcMap = { facebook: '📘 Facebook', instagram: '📸 Instagram', telefono: '📞 Phone', phone: '📞 Phone', whatsapp: '💬 WhatsApp', qr: '▦ QR', web: '🌐 Web' };
     var src = (l.source || 'web').toLowerCase();
     var photos = l.photos || [];
@@ -316,16 +317,21 @@
     };
     var vehLine = [l.vehicle, l.services].filter(Boolean).join(' · ');
     var when = [l.days, l.time_slot].filter(Boolean).join(' · ');
+    var whenLine = when
+      ? '<div class="lead-line"><span class="li">🗓</span><span>' + esc(when)
+          + '<span style="opacity:.6"> · ' + (sched ? 'confirmed' : 'requested') + '</span></span></div>'
+      : '';
     return '' +
-      '<div class="lead' + (done ? ' done' : '') + '">' +
+      '<div class="lead' + (sched ? ' done' : '') + '">' +
         '<div class="lead-body">' +
           thumb +
           '<div class="lead-main">' +
             '<div class="lead-top">' +
               '<div class="lead-name">' + esc(l.name || 'Unknown') + '</div>' +
               '<div class="lead-actions">' +
-                '<span class="badge ' + (done ? 'contacted' : 'new') + '">' + (done ? 'Contacted' : 'New') + '</span>' +
-                '<button class="icon-btn" title="' + (done ? 'Mark as new' : 'Mark contacted') + '" onclick="AQ.toggle(\'' + l.id + '\')">' + (done ? '↩' : '✓') + '</button>' +
+                '<span class="badge ' + (sched ? 'scheduled' : 'new') + '">' + (sched ? '✓ Scheduled' : 'New') + '</span>' +
+                '<button class="icon-btn" title="' + (sched ? 'Set back to New' : 'Approve the requested time') + '" onclick="AQ.toggle(\'' + l.id + '\')">' + (sched ? '↩' : '✓') + '</button>' +
+                '<button class="icon-btn" title="Change the time" onclick="AQ.changeTime(\'' + l.id + '\')">🕑</button>' +
                 '<button class="icon-btn" title="Delete" onclick="AQ.remove(\'' + l.id + '\')">🗑</button>' +
               '</div>' +
             '</div>' +
@@ -336,7 +342,7 @@
             '</div>' +
             line('🚗', vehLine) +
             line('📍', l.area) +
-            line('🗓', when) +
+            whenLine +
           '</div>' +
         '</div>' +
       '</div>';
@@ -359,12 +365,25 @@
 
   // Row actions (exposed for inline handlers)
   window.AQ = {
+    // Approve the customer's requested time (or set it back to New).
     toggle: async function (id) {
       var l = allLeads.find(function (x) { return x.id === id; });
       if (!l) return;
-      var next = l.status === 'contacted' ? 'new' : 'contacted';
+      var next = l.status === 'scheduled' ? 'new' : 'scheduled';
       var res = await supa.from('leads').update({ status: next }).eq('id', id);
       if (!res.error) { l.status = next; render(currentList()); }
+    },
+    // Change the appointment to a different day/time, then mark it scheduled.
+    changeTime: async function (id) {
+      var l = allLeads.find(function (x) { return x.id === id; });
+      if (!l) return;
+      var day = prompt('Confirmed day (e.g. Fri, Jul 25):', l.days || '');
+      if (day === null) return;
+      var time = prompt('Confirmed time (e.g. 9:00 AM):', l.time_slot || '');
+      if (time === null) return;
+      var patch = { days: day.trim() || null, time_slot: time.trim() || null, status: 'scheduled' };
+      var res = await supa.from('leads').update(patch).eq('id', id);
+      if (!res.error) { l.days = patch.days; l.time_slot = patch.time_slot; l.status = 'scheduled'; render(currentList()); }
     },
     remove: async function (id) {
       if (!confirm('Delete this request permanently?')) return;

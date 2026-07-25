@@ -2074,7 +2074,19 @@ const VEHICLE_TYPES = [
   { label: 'Coupe / Sports', glyph: 'Coupe' },
   { label: 'Other', glyph: 'Other' }];
 
-const QUOTE_STEPS = ['Your car', 'Photos & location', 'Your details'];
+const QUOTE_STEPS = ['Your car', 'When & where', 'Your details'];
+
+// Bookable start times within business hours (Mon–Sat, 8 AM–6 PM).
+const TIME_OPTIONS = (() => {
+  const out = [];
+  for (let m = 8 * 60; m <= 17 * 60 + 30; m += 30) {
+    const h = Math.floor(m / 60), min = m % 60;
+    const ampm = h < 12 ? 'AM' : 'PM';
+    const h12 = h % 12 === 0 ? 12 : h % 12;
+    out.push(h12 + ':' + (min === 0 ? '00' : min) + ' ' + ampm);
+  }
+  return out;
+})();
 
 const TIME_SLOTS = [
 'Morning · 8–11 AM',
@@ -2306,7 +2318,7 @@ const QuoteForm = ({ onBook }) => {
   const [step, setStep] = React.useState(0);
   const [data, setData] = React.useState({
     vehicleType: '', services: [], serviceOther: '', dirt: 0, petHair: '',
-    photos: [], dates: [], timeSlot: '', area: '', name: '', phone: '', email: ''
+    photos: [], apptDate: '', apptTime: '', dates: [], timeSlot: '', area: '', name: '', phone: '', email: ''
   });
   const [errors, setErrors] = React.useState({});
   const [status, setStatus] = React.useState('idle'); // idle | sending | sent | error
@@ -2397,6 +2409,7 @@ const QuoteForm = ({ onBook }) => {
       Vehicle: data.vehicleType,
       Services: serviceList().join(', '),
       Location: data.area,
+      'Requested time': (data.apptDate || 'Any day') + (data.apptTime ? ' · ' + data.apptTime : '') + ' (to confirm)',
       Source: LEAD_SOURCE
     };
     if (data.email.trim()) {
@@ -2432,6 +2445,8 @@ const QuoteForm = ({ onBook }) => {
         vehicle: data.vehicleType,
         services: serviceList().join(', '),
         area: data.area,
+        days: data.apptDate || null,
+        time_slot: data.apptTime || null,
         photos: photoUrls,
         source: LEAD_SOURCE
       });
@@ -2477,7 +2492,7 @@ const QuoteForm = ({ onBook }) => {
     data.photos.forEach((p) => URL.revokeObjectURL(p.url));
     setData({
       vehicleType: '', services: [], serviceOther: '', dirt: 0, petHair: '',
-      photos: [], dates: [], timeSlot: '', area: '', name: '', phone: '', email: ''
+      photos: [], apptDate: '', apptTime: '', dates: [], timeSlot: '', area: '', name: '', phone: '', email: ''
     });
     setErrors({});
     setStatus('idle');
@@ -2584,6 +2599,14 @@ const QuoteForm = ({ onBook }) => {
     .qw-section { margin-top: 14px; }
     .qw-section:first-child { margin-top: 0; }
     .qw-slabel { font-size: 12px; font-weight: 800; color: var(--ink); margin: 0 0 8px; letter-spacing: -.01em; }
+    .qw-select {
+      width: 100%; font-family: inherit; font-size: 15px; color: var(--ink);
+      padding: 13px 14px; border: 1px solid var(--line); background: var(--white);
+      border-radius: 4px; -webkit-appearance: none; appearance: none; cursor: pointer;
+      background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%235B6B82' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5 L6 6.5 L11 1.5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+    }
+    .qw-select:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 4px rgba(30,91,198,.12); }
     .qw-photozones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .qw-zone-label { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #5B6B82; margin-bottom: 6px; }
     .qw-zone {
@@ -2633,7 +2656,7 @@ const QuoteForm = ({ onBook }) => {
 
   const progress = Math.round(step / (QUOTE_STEPS.length - 1) * 100);
   const page0ok = data.vehicleType.trim() && data.services.length > 0;
-  const page1ok = data.area.trim();
+  const page1ok = data.apptDate && data.apptTime && data.area.trim();
 
   return (
     <div>
@@ -2680,23 +2703,37 @@ const QuoteForm = ({ onBook }) => {
               </div>}
             </div>
 
-            <button type="button" className="btn btn-primary" disabled={!page0ok} onClick={next}
-          style={{ width: '100%', justifyContent: 'center', marginTop: 18, opacity: page0ok ? 1 : .4 }}>
-              Continue <Icon.Arrow />
-            </button>
-          </div>}
-
-        {/* ── Page 2 · Photos + location ── */}
-        {step === 1 &&
-        <div>
-            <h4 className="display" style={{ fontSize: 18, margin: '0 0 14px' }}>Photos &amp; location</h4>
-
             <div className="qw-section">
               <div className="qw-slabel">Photos <span style={{ textTransform: 'none', fontWeight: 600, color: '#9AA8BC' }}>· optional</span></div>
               <div className="qw-photozones">
                 {PhotoZone('Exterior', <VehicleGlyph.Sedan />)}
                 {PhotoZone('Interior', <Icon.Seat />)}
               </div>
+            </div>
+
+            <button type="button" className="btn btn-primary" disabled={!page0ok} onClick={next}
+          style={{ width: '100%', justifyContent: 'center', marginTop: 18, opacity: page0ok ? 1 : .4 }}>
+              Continue <Icon.Arrow />
+            </button>
+          </div>}
+
+        {/* ── Page 2 · When & where ── */}
+        {step === 1 &&
+        <div>
+            <h4 className="display" style={{ fontSize: 18, margin: '0 0 14px' }}>When &amp; where?</h4>
+
+            <div className="qw-section">
+              <div className="qw-slabel">Preferred day <span style={{ textTransform: 'none', fontWeight: 600, color: '#9AA8BC' }}>· we'll confirm</span></div>
+              <QuoteCalendar selected={data.apptDate ? [data.apptDate] : []}
+            onToggle={(day) => set('apptDate', day === data.apptDate ? '' : day)} />
+            </div>
+
+            <div className="qw-section">
+              <div className="qw-slabel">Preferred time</div>
+              <select className="qw-select" value={data.apptTime} onChange={(e) => set('apptTime', e.target.value)}>
+                <option value="">Choose a time…</option>
+                {TIME_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
             </div>
 
             <div className="qw-section">
@@ -2739,6 +2776,7 @@ const QuoteForm = ({ onBook }) => {
               {[
             ['Vehicle', data.vehicleType],
             ['Services', serviceList().join(', ')],
+            ['Preferred', (data.apptDate || '') + (data.apptTime ? ' · ' + data.apptTime : '')],
             ['Photos', data.photos.length > 0 ? data.photos.length + ' attached' : 'None'],
             ['Location', data.area]].
             filter(([, v]) => v).map(([k, v]) =>
