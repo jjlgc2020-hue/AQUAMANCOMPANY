@@ -676,53 +676,27 @@ const Services = () =>
           }}>
               All Services · {allServices.length}
             </div>
-            <ul style={{
-            listStyle: 'none', padding: 0, margin: 0,
-            borderTop: '1px solid #DDE3EC'
-          }}>
+            <div className="svc-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               {allServices.map((s, i) =>
-            <li
-              key={s}
-              className="service-row"
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '22px 0',
-                borderBottom: '1px solid #DDE3EC',
-                cursor: 'pointer',
-                transition: 'padding .2s ease'
+            <div key={s} className="svc-card">
+                  <span style={{
+                fontFamily: 'JetBrains Mono, monospace', fontSize: 10, fontWeight: 500,
+                color: '#8B96A8', letterSpacing: '.04em', flexShrink: 0
               }}>
-              
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-                    <span style={{
-                  fontFamily: 'JetBrains Mono, monospace',
-                  fontSize: 11, fontWeight: 500,
-                  color: '#8B96A8', letterSpacing: '.04em',
-                  minWidth: 28
-                }}>
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
-                    <span style={{
-                  fontFamily: 'Plus Jakarta Sans, sans-serif',
-                  fontSize: 'clamp(18px, 1.8vw, 22px)',
-                  fontWeight: 600, letterSpacing: '-0.02em',
-                  color: '#0B1A2E'
-                }}>
-                      {s}
-                    </span>
-                  </div>
-                  <span className="service-arrow" style={{
-                width: 36, height: 36, borderRadius: '50%',
-                background: '#F6F8FA',
-                display: 'grid', placeItems: 'center',
-                color: '#5B6B82',
-                transition: 'all .2s ease',
-                flexShrink: 0
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <span style={{
+                fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 15, fontWeight: 600,
+                letterSpacing: '-0.01em', color: '#0B1A2E', flex: 1, lineHeight: 1.25
               }}>
+                    {s}
+                  </span>
+                  <span className="svc-arrow" style={{ color: '#8B96A8', flexShrink: 0, display: 'grid', placeItems: 'center' }}>
                     <Icon.Arrow />
                   </span>
-                </li>
+                </div>
             )}
-            </ul>
+            </div>
             <div style={{ marginTop: 32 }}>
               <a href="#contact" className="btn btn-primary" style={{ fontSize: 14 }}>
                 Get a quote for any service <Icon.Arrow />
@@ -799,16 +773,20 @@ const Services = () =>
     </div>
 
     <style>{`
-      .service-row:hover {
-        padding-left: 8px !important;
+      .svc-card {
+        display: flex; align-items: center; gap: 12px;
+        padding: 14px 16px;
+        border: 1px solid #E1E7F0; border-radius: 12px; background: #fff;
+        cursor: pointer;
+        transition: border-color .18s ease, box-shadow .18s ease, transform .12s ease;
       }
-      .service-row:hover .service-arrow {
-        background: #0B1A2E !important;
-        color: white !important;
-      }
+      .svc-card:hover { border-color: #1E5BC6; box-shadow: 0 6px 18px rgba(11,26,46,.07); transform: translateY(-2px); }
+      .svc-arrow { opacity: 0; transform: translateX(-4px); transition: opacity .18s ease, transform .18s ease, color .18s ease; }
+      .svc-card:hover .svc-arrow { opacity: 1; transform: translateX(0); color: #1E5BC6; }
       @media (max-width: 900px) {
         .services-layout { grid-template-columns: 1fr !important; }
       }
+      @media (max-width: 520px) { .svc-grid { grid-template-columns: 1fr !important; } }
     `}</style>
   </section>;
 
@@ -2318,7 +2296,7 @@ const QuoteForm = ({ onBook }) => {
   const [step, setStep] = React.useState(0);
   const [data, setData] = React.useState({
     vehicleType: '', services: [], serviceOther: '', dirt: 0, petHair: '',
-    photos: [], apptDate: '', apptTime: '', dates: [], timeSlot: '', area: '', name: '', phone: '', email: ''
+    photos: [], apptDate: '', apptTime: '', dates: [], timeSlot: '', area: '', name: '', phone: '', email: '', heardAbout: '', heardAboutOther: ''
   });
   const [errors, setErrors] = React.useState({});
   const [status, setStatus] = React.useState('idle'); // idle | sending | sent | error
@@ -2398,6 +2376,14 @@ const QuoteForm = ({ onBook }) => {
   const conditionText = () =>
   data.dirt + '/10 (' + dirtLabel(data.dirt) + ')' + (data.petHair === 'Yes' ? ' + pet hair' : '');
 
+  // Self-reported acquisition channel. "Other" keeps the free-text detail (same convention as serviceList).
+  const heardAboutValue = () => {
+    if (data.heardAbout === 'Other') {
+      return data.heardAboutOther.trim() ? 'Other: ' + data.heardAboutOther.trim() : 'Other';
+    }
+    return data.heardAbout;
+  };
+
   const leadFields = () => {
     const fields = {
       _subject: 'New quote request - ' + data.name.trim(),
@@ -2410,6 +2396,7 @@ const QuoteForm = ({ onBook }) => {
       Services: serviceList().join(', '),
       Location: data.area,
       'Requested time': (data.apptDate || 'Any day') + (data.apptTime ? ' · ' + data.apptTime : '') + ' (to confirm)',
+      'Heard about us': heardAboutValue() || 'Not specified',
       Source: LEAD_SOURCE
     };
     if (data.email.trim()) {
@@ -2447,6 +2434,7 @@ const QuoteForm = ({ onBook }) => {
         area: data.area,
         days: data.apptDate || null,
         time_slot: data.apptTime || null,
+        heard_about: heardAboutValue() || null,
         photos: photoUrls,
         source: LEAD_SOURCE
       });
@@ -2492,7 +2480,7 @@ const QuoteForm = ({ onBook }) => {
     data.photos.forEach((p) => URL.revokeObjectURL(p.url));
     setData({
       vehicleType: '', services: [], serviceOther: '', dirt: 0, petHair: '',
-      photos: [], apptDate: '', apptTime: '', dates: [], timeSlot: '', area: '', name: '', phone: '', email: ''
+      photos: [], apptDate: '', apptTime: '', dates: [], timeSlot: '', area: '', name: '', phone: '', email: '', heardAbout: '', heardAboutOther: ''
     });
     setErrors({});
     setStatus('idle');
@@ -2769,6 +2757,24 @@ const QuoteForm = ({ onBook }) => {
                 <input type="email" value={data.email}
               onChange={(e) => set('email', e.target.value)} placeholder="you@example.com" />
                 {errors.email && <p className="qw-err">{errors.email}</p>}
+              </div>
+              <div className="field">
+                <label>How did you hear about us? <span style={{ fontWeight: 500, color: '#9AA8BC' }}>· optional</span></label>
+                <select className="qw-select" value={data.heardAbout} onChange={(e) => set('heardAbout', e.target.value)}>
+                  <option value="">Select one…</option>
+                  <option>Facebook / Instagram</option>
+                  <option>Google / Website</option>
+                  <option>QR code / Flyer / Yard sign</option>
+                  <option>Referral / Friend or neighbor</option>
+                  <option>Phone call / Returning customer</option>
+                  <option value="Other">Other (please specify)</option>
+                </select>
+                {data.heardAbout === 'Other' &&
+                <input type="text" value={data.heardAboutOther}
+                onChange={(e) => set('heardAboutOther', e.target.value)}
+                placeholder="Tell us how you found us"
+                maxLength={120}
+                style={{ marginTop: 8 }} />}
               </div>
             </div>
 
