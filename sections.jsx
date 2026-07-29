@@ -71,130 +71,76 @@ const CircularLogo = () =>
 
 
 const Nav = ({ onBook }) => {
-  const [scrolled, setScrolled] = React.useState(false);
-  React.useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
   const links = [
-  { id: 'services', label: 'Services' },
-  { id: 'enhancements', label: 'Enhancement' },
-  { id: 'reel', label: 'Videos' },
-  { id: 'contact', label: 'Contact' }];
-
-  const socials = [
-  { href: IG_HREF, label: 'Instagram', icon: <Icon.Instagram />, hover: 'linear-gradient(135deg, #833AB4 0%, #E1306C 50%, #FCB045 100%)', color: '#E1306C' },
-  { href: FB_HREF, label: 'Facebook', icon: <Icon.Facebook />, hover: '#1877F2', color: '#1877F2' },
-  { href: `sms:${PHONE.replace(/[^\d+]/g, '')}`, label: 'Text message', icon: <Icon.Message />, hover: '#22C55E', color: '#22C55E' }];
+  { id: 'services', label: 'services' },
+  { id: 'process', label: 'how it works' },
+  { id: 'enhancements', label: 'enhancement' },
+  { id: 'reel', label: 'videos' },
+  { id: 'contact', label: 'contact' }];
 
   return (
     <header style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
-      background: scrolled ? 'rgba(0, 0, 0, .88)' : 'rgba(0, 0, 0, .35)',
-      backdropFilter: scrolled ? 'blur(14px)' : 'blur(6px)',
-      WebkitBackdropFilter: scrolled ? 'blur(14px)' : 'blur(6px)',
-      borderBottom: scrolled ? '1px solid rgba(255,255,255,.06)' : '1px solid transparent',
-      transition: 'background .3s ease, border-color .3s ease, backdrop-filter .3s ease'
+      background: '#000'
     }}>
-      <div className="container" style={{
+      <div className="nav-row" style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '14px 28px', gap: 24
+        padding: '0 34px', gap: 28, height: 78, maxWidth: 1680, margin: '0 auto'
       }}>
-        <CircularLogo />
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 36 }} className="nav-links">
+        {/* Wordmark, stacked and tight */}
+        <a href="#top" style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, textDecoration: 'none' }}>
+          <span className="brand-mark" aria-hidden="true"></span>
+          <span className="nav-word" style={{
+            fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: 800, fontSize: 15,
+            lineHeight: 1.05, letterSpacing: '-.02em', color: '#fff', textTransform: 'uppercase'
+          }}>
+            Aquaman<br />Services
+          </span>
+        </a>
+
+        <nav className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: 40 }}>
           {links.map((l, i) =>
-          <a key={i} href={`#${l.id}`} style={{
-            color: '#FFFFFF', fontSize: 15, fontWeight: 500,
-            fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-0.01em',
-            transition: 'opacity .15s ease',
-            opacity: 0.92
-          }}
-          onMouseEnter={(e) => e.target.style.opacity = '0.65'}
-          onMouseLeave={(e) => e.target.style.opacity = '0.92'}>
-            
+          <a key={i} href={`#${l.id}`} className="nav-a" style={{
+            color: 'rgba(255,255,255,.88)', fontSize: 16, fontWeight: 400,
+            fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-.01em', textDecoration: 'none'
+          }}>
               {l.label}
             </a>
           )}
         </nav>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }} className="nav-right">
-          <a href={PHONE_HREF} style={{
-            display: 'flex', alignItems: 'center', gap: 14,
-            color: 'white'
-          }} className="nav-call">
-            {/* Speech bubble badge */}
-            <div style={{ position: 'relative', width: 64, height: 64, flexShrink: 0 }}>
-              <svg viewBox="0 0 80 80" width="64" height="64">
-                <path
-                  d="M 40,8 C 60,8 74,22 74,40 C 74,58 60,72 40,72 C 36,72 32,71 28,70 L 14,76 L 18,62 C 10,56 6,48 6,40 C 6,22 20,8 40,8 Z"
-                  fill="none" stroke="#2F7BFF" strokeWidth="1.5" />
-                
-              </svg>
-              <div style={{
-                position: 'absolute', inset: 0, display: 'grid', placeItems: 'center',
-                fontFamily: 'Plus Jakarta Sans', fontWeight: 900, fontSize: 22, color: 'white',
-                paddingBottom: 8
-              }}>
-                24
-              </div>
-            </div>
-            <div style={{ lineHeight: 1.2 }}>
-              <div style={{
-                fontSize: 10, fontWeight: 700, letterSpacing: '.16em',
-                color: '#2F7BFF', textTransform: 'uppercase'
-              }}>Call us</div>
-              <div style={{
-                fontFamily: 'Plus Jakarta Sans', fontWeight: 800, fontSize: 17, color: 'white'
-              }}>{PHONE}</div>
-            </div>
-          </a>
 
-          {/* Social icons row — sibling of the phone <a>, not nested */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }} className="nav-socials">
-            {socials.map((s, i) =>
-            <a
-              key={i}
-              href={s.href}
-              target={s.href.startsWith('sms:') ? undefined : '_blank'}
-              rel="noreferrer noopener"
-              aria-label={s.label}
-              title={s.label}
-              style={{
-                width: 28, height: 28,
-                display: 'grid', placeItems: 'center',
-                borderRadius: 6,
-                background: 'rgba(255,255,255,.08)',
-                border: '1px solid rgba(255,255,255,.14)',
-                color: 'white',
-                transition: 'all .2s ease',
-                textDecoration: 'none'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = s.hover;
-                e.currentTarget.style.borderColor = 'transparent';
-                e.currentTarget.style.transform = 'translateY(-1px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255,255,255,.08)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,.14)';
-                e.currentTarget.style.transform = '';
-              }}>
-              
-                <span style={{ width: 14, height: 14, display: 'grid', placeItems: 'center' }}>
-                  {React.cloneElement(s.icon, { width: 14, height: 14 })}
-                </span>
-              </a>
-            )}
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 22, flexShrink: 0 }}>
+          <a href={PHONE_HREF} className="nav-phone" style={{
+            color: 'rgba(255,255,255,.88)', fontSize: 15, fontWeight: 500,
+            fontFamily: 'Plus Jakarta Sans, sans-serif', textDecoration: 'none', whiteSpace: 'nowrap'
+          }}>
+            {PHONE}
+          </a>
+          <button onClick={onBook} className="nav-cta" style={{
+            fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: 700, fontSize: 14,
+            letterSpacing: '.02em', textTransform: 'uppercase', color: '#fff',
+            background: 'transparent', border: '1.5px solid #fff', borderRadius: 999,
+            padding: '13px 26px', cursor: 'pointer', whiteSpace: 'nowrap',
+            transition: 'background .18s ease, color .18s ease'
+          }}>
+            Book a detail
+          </button>
         </div>
       </div>
+
       <style>{`
-        @media (max-width: 1080px) {
-          .nav-links { display: none !important; }
+        /* Masked so the mark takes the brand blue whatever the file's own fills are. */
+        .brand-mark {
+          width: 34px; height: 34px; display: block; flex-shrink: 0;
+          background: #2F7BFF;
+          -webkit-mask: url(aquaman-logo.svg) center / contain no-repeat;
+          mask: url(aquaman-logo.svg) center / contain no-repeat;
         }
-        @media (max-width: 640px) {
-          .nav-call > div:last-child { display: none !important; }
-        }
+        .nav-a:hover { color: #fff !important; text-decoration: underline; text-underline-offset: 5px; }
+        .nav-phone:hover { color: #fff !important; }
+        .nav-cta:hover { background: #fff !important; color: #000 !important; }
+        @media (max-width: 1180px) { .nav-links { display: none !important; } }
+        @media (max-width: 560px) { .nav-phone { display: none !important; } }
       `}</style>
     </header>);
 
@@ -212,91 +158,69 @@ const Hero = ({ onBook }) =>
   background: '#000',
   color: 'white', overflow: 'hidden',
   minHeight: '100vh', display: 'flex', alignItems: 'center',
-  paddingTop: 140, paddingBottom: 80
+  paddingTop: 78
 }}>
-    {/* Background video */}
     <video
     autoPlay muted loop playsInline
     poster={HERO_VIDEO_POSTER}
     style={{
       position: 'absolute', inset: 0,
       width: '100%', height: '100%',
-      objectFit: 'cover', zIndex: 0
+      objectFit: 'cover', zIndex: 0,
+      filter: 'saturate(1.12) contrast(1.06)'
     }}>
-    
       <source src={HERO_VIDEO_SRC} type="video/mp4" />
     </video>
-    {/* Cinematic dark overlay — keeps the video visible but legible */}
+    {/* One even scrim — the footage stays visible; the type carries the contrast. */}
     <div style={{
     position: 'absolute', inset: 0, zIndex: 1,
-    background: 'linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.35) 40%, rgba(0,0,0,.55) 100%)'
-  }}></div>
-    {/* Vignette */}
-    <div style={{
-    position: 'absolute', inset: 0, zIndex: 1,
-    background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,.7) 100%)'
+    background: 'linear-gradient(180deg, rgba(0,0,0,.34) 0%, rgba(0,0,0,.20) 45%, rgba(0,0,0,.46) 100%)'
   }}></div>
 
-    <div className="container" style={{ position: 'relative', zIndex: 2, width: '100%', textAlign: 'center' }}>
-      <div className="fadeup" style={{ maxWidth: 1100, margin: '0 auto' }}>
-        {/* Eyebrow */}
-        <div style={{
-        fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: 500,
-        fontSize: 'clamp(16px, 1.6vw, 19px)',
-        color: 'rgba(255,255,255,.85)', letterSpacing: '-0.01em',
-        marginBottom: 24
+    <div style={{ position: 'relative', zIndex: 2, width: '100%', textAlign: 'center', padding: '0 24px',
+    transform: 'translateY(12vh)' }}>
+      <div className="fadeup">
+        {/* Two lines, all caps, tight — the whole hero is this sentence. */}
+        <h1 className="hero-h" style={{
+        fontFamily: 'Plus Jakarta Sans, sans-serif',
+        /* 4vw alone never leaves the floor on a phone, which left the headline
+           smaller than the section titles below it. The 6.4vw term scales. */
+        fontSize: 'clamp(30px, 6.4vw, 52px)',
+        margin: '0',
+        lineHeight: 1.12,
+        fontWeight: 800,
+        letterSpacing: '-.02em',
+        textTransform: 'uppercase',
+        color: '#fff',
+        /* The scrim alone loses to the brightest frames of the footage, so the
+           contrast is carried on the glyphs themselves rather than by a vignette. */
+        textShadow: '0 1px 2px rgba(0,0,0,.85), 0 2px 12px rgba(0,0,0,.75), 0 6px 34px rgba(0,0,0,.62)'
       }}>
-          We come to you · Premium detailing on demand
-        </div>
-
-        {/* Main title */}
-        <h1 className="display" style={{
-        fontSize: 'clamp(40px, 7vw, 96px)',
-        margin: '0 0 36px',
-        lineHeight: 1.02,
-        fontWeight: 700,
-        color: 'white',
-        letterSpacing: '-0.04em',
-        textShadow: '0 4px 30px rgba(0,0,0,.5)',
-        textWrap: 'balance'
-      }}>
-          Premium mobile detailing,<br />
-          brought to your driveway.
+          <span style={{ fontWeight: 400, display: 'block' }}>We come to you</span>
+          You drive off shining
         </h1>
 
-        {/* Vertical divider line */}
-        <div style={{
-        width: 1, height: 60,
-        background: 'linear-gradient(180deg, transparent, rgba(255,255,255,.5), transparent)',
-        margin: '0 auto 40px'
-      }}></div>
-
-        {/* CTAs */}
-        <div style={{
-        display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap'
-      }}>
-          <button className="btn btn-primary" onClick={onBook}
-        style={{ fontSize: 14, padding: '18px 32px' }}>
-            Book Your Detail <Icon.Arrow />
-          </button>
-          <a href="#services" className="btn btn-ghost"
-        style={{ fontSize: 14, padding: '18px 32px' }}>
-            Our Services
-          </a>
-        </div>
       </div>
     </div>
 
-    {/* Scroll indicator */}
-    <div style={{
-    position: 'absolute', bottom: 30, left: '50%', transform: 'translateX(-50%)',
-    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
-    color: 'rgba(255,255,255,.5)', fontSize: 10, letterSpacing: '.24em',
-    textTransform: 'uppercase', fontWeight: 700, zIndex: 2
+    {/* Scroll cue */}
+    <a href="#services" style={{
+    position: 'absolute', bottom: 34, left: '50%', transform: 'translateX(-50%)',
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+    color: 'rgba(255,255,255,.85)', fontSize: 15, zIndex: 2, textDecoration: 'none'
   }}>
-      <span>Scroll</span>
-      <div style={{ width: 1, height: 40, background: 'linear-gradient(180deg, rgba(255,255,255,.5), transparent)' }}></div>
-    </div>
+      <span>scroll down</span>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+      strokeLinecap="round" strokeLinejoin="round" className="hero-chev">
+        <path d="M5 8l7 6 7-6" /><path d="M5 14l7 6 7-6" />
+      </svg>
+    </a>
+
+    <style>{`
+      .hero-chev { animation: heroBob 2.1s ease-in-out infinite; }
+      @keyframes heroBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+      @media (prefers-reduced-motion: reduce) { .hero-chev { animation: none; } }
+    `}</style>
   </section>;
 
 
@@ -1261,197 +1185,83 @@ const reelClips = [
 { src: 'clip-7.mp4' }];
 
 
-const ReelCard = ({ clip, index }) => {
-  const ref = React.useRef(null);
-  const cardRef = React.useRef(null);
-  const [playing, setPlaying] = React.useState(false);
+const ReelPanels = () => {
+  const [active, setActive] = React.useState(0);
   const [muted, setMuted] = React.useState(true);
-  const userPaused = React.useRef(false);
+  const vids = React.useRef([]);
+  const wrapRef = React.useRef(null);
+  const [inView, setInView] = React.useState(false);
 
-  const play = () => {
-    const v = ref.current;
-    if (!v) return;
-    userPaused.current = false;
-    v.play().then(() => setPlaying(true)).catch(() => {});
-  };
-  const pause = () => {
-    const v = ref.current;
-    if (!v) return;
-    userPaused.current = true;
-    v.pause();
-    setPlaying(false);
-  };
-  const toggleMute = (e) => {
-    e.stopPropagation();
-    const v = ref.current;
-    if (!v) return;
-    v.muted = !v.muted;
-    setMuted(v.muted);
-  };
-
-  // Auto-play (muted) whenever the clip is on screen; tap pauses or resumes
+  // Only start playback once the section scrolls into view
   React.useEffect(() => {
-    if (!cardRef.current) return;
-    const obs = new IntersectionObserver(([entry]) => {
-      const v = ref.current;
-      if (!v) return;
-      if (entry.isIntersecting) {
-        if (!userPaused.current) {
-          v.play().then(() => setPlaying(true)).catch(() => {});
-        }
-      } else {
-        v.pause();
-        setPlaying(false);
-        userPaused.current = false;
-      }
-    }, { threshold: 0.35 });
-    obs.observe(cardRef.current);
+    if (!wrapRef.current) return;
+    const obs = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.2 });
+    obs.observe(wrapRef.current);
     return () => obs.disconnect();
   }, []);
 
+  // Play only the active clip; pause the rest to keep it light
+  React.useEffect(() => {
+    vids.current.forEach((v, i) => {
+      if (!v) return;
+      if (i === active && inView) {v.play().catch(() => {});} else {v.pause();}
+    });
+  }, [active, inView]);
+
+  const toggleMute = (e) => {
+    e.stopPropagation();
+    setMuted((m) => {
+      const next = !m;
+      const v = vids.current[active];
+      if (v) v.muted = next;
+      return next;
+    });
+  };
+
   return (
-    <div
-      ref={cardRef}
-      onClick={() => playing ? pause() : play()}
-      style={{
-        position: 'relative',
-        aspectRatio: '9 / 16',
-        overflow: 'hidden',
-        cursor: 'pointer',
-        background: '#000',
-        clipPath: 'polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px))',
-        transform: playing ? 'translateY(-8px) scale(1.02)' : 'translateY(0) scale(1)',
-        boxShadow: playing ?
-        '0 30px 60px rgba(30,91,198,.35), 0 0 0 1px rgba(47,123,255,.4)' :
-        '0 10px 30px rgba(0,0,0,.3)',
-        transition: 'transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease'
-      }}>
-      
-      <video
-        ref={ref}
-        src={clip.src}
-        muted={muted}
-        loop
-        playsInline
-        preload="metadata"
-        style={{
-          position: 'absolute', inset: 0,
-          width: '100%', height: '100%',
-          objectFit: 'cover'
-        }} />
-      
+    <div className="reel-acc" ref={wrapRef}>
+      {reelClips.map((clip, i) => {
+        const on = i === active;
+        const label = 'Reel ' + String(i + 1).padStart(2, '0');
+        return (
+          <div
+            key={clip.src}
+            className={'reel-panel' + (on ? ' on' : '')}
+            style={{ flex: on ? '6 1 0%' : '1 1 0%' }}
+            onMouseEnter={() => setActive(i)}
+            onClick={() => setActive(i)}>
+            <video
+              ref={(el) => vids.current[i] = el}
+              src={clip.src}
+              muted={muted}
+              loop
+              playsInline
+              preload="metadata"
+              className="reel-panel-vid" />
+            <div className="reel-panel-shade"></div>
 
-      {/* Always-visible top label */}
-      <div style={{
-        position: 'absolute', top: 14, left: 14,
-        display: 'inline-flex', alignItems: 'center', gap: 8,
-        padding: '6px 12px',
-        background: 'rgba(11,26,46,.6)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255,255,255,.18)',
-        fontSize: 10, fontWeight: 700, letterSpacing: '.16em',
-        textTransform: 'uppercase', color: 'white',
-        zIndex: 3
-      }}>
-        <span style={{
-          width: 6, height: 6, borderRadius: '50%',
-          background: playing ? '#2F7BFF' : 'rgba(255,255,255,.6)',
-          boxShadow: playing ? '0 0 8px #2F7BFF' : 'none',
-          transition: 'all .2s'
-        }}></span>
-        {playing ? 'Playing' : 'Tap to play'}
-      </div>
+            {/* Collapsed state: label on top, plus at the bottom */}
+            <div className="reel-panel-collapsed">
+              <span className="reel-panel-tag">{label}</span>
+              <span className="reel-panel-plus">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+              </span>
+            </div>
 
-      {/* Mute toggle (only when playing) */}
-      {playing &&
-      <button
-        onClick={toggleMute}
-        style={{
-          position: 'absolute', top: 14, right: 14,
-          width: 36, height: 36,
-          background: 'rgba(11,26,46,.6)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255,255,255,.18)',
-          color: 'white',
-          display: 'grid', placeItems: 'center',
-          borderRadius: '50%',
-          zIndex: 3,
-          cursor: 'pointer'
-        }}
-        aria-label={muted ? 'Unmute' : 'Mute'}>
-        
-          {muted ?
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M3 9 V15 H7 L12 19 V5 L7 9 Z" fill="currentColor" />
-              <path d="M16 9 L22 15 M22 9 L16 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg> :
+            {/* Active state: label bottom-left in blue */}
+            <div className="reel-panel-open">
+              <div className="reel-panel-eyebrow">Now playing</div>
+              <div className="reel-panel-title">{label}</div>
+            </div>
+            {on &&
+            <button className="reel-panel-sound" onClick={toggleMute} aria-label={muted ? 'Unmute' : 'Mute'}>
+              {muted ?
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 9 V15 H7 L12 19 V5 L7 9 Z" fill="currentColor" /><path d="M16 9 L22 15 M22 9 L16 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg> :
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 9 V15 H7 L12 19 V5 L7 9 Z" fill="currentColor" /><path d="M16 8 C18 10 18 14 16 16 M19 5 C22 8 22 16 19 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" /></svg>}
+            </button>}
+          </div>);
 
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M3 9 V15 H7 L12 19 V5 L7 9 Z" fill="currentColor" />
-              <path d="M16 8 C18 10 18 14 16 16 M19 5 C22 8 22 16 19 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
-            </svg>
-        }
-        </button>
-      }
-
-      {/* Play overlay (when paused) */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        display: 'grid', placeItems: 'center',
-        background: playing ? 'transparent' : 'linear-gradient(180deg, rgba(11,26,46,.1) 0%, rgba(11,26,46,.55) 100%)',
-        transition: 'background .3s ease',
-        pointerEvents: 'none',
-        zIndex: 2
-      }}>
-        <div style={{
-          width: 70, height: 70,
-          borderRadius: '50%',
-          background: 'rgba(255,255,255,.92)',
-          color: '#0B1A2E',
-          display: 'grid', placeItems: 'center',
-          opacity: playing ? 0 : 1,
-          transform: playing ? 'scale(0.6)' : 'scale(1)',
-          transition: 'opacity .3s ease, transform .3s ease',
-          boxShadow: '0 10px 30px rgba(0,0,0,.4)'
-        }}>
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M7 5 V19 L20 12 Z" />
-          </svg>
-        </div>
-      </div>
-
-      {/* Bottom reel number indicator */}
-      <div style={{
-        position: 'absolute', bottom: 14, left: 14,
-        display: 'inline-flex', alignItems: 'center', gap: 8,
-        padding: '6px 12px',
-        background: 'rgba(11,26,46,.55)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        border: '1px solid rgba(255,255,255,.14)',
-        fontSize: 10, fontWeight: 700, letterSpacing: '.18em',
-        textTransform: 'uppercase', color: 'white',
-        zIndex: 3
-      }}>
-        Reel · {String(index + 1).padStart(2, '0')}
-      </div>
-
-      {/* Hover hint (only when not playing, fades out on hover) */}
-      <div style={{
-        position: 'absolute', bottom: 90, left: '50%',
-        transform: 'translateX(-50%)',
-        background: 'rgba(47,123,255,.95)',
-        color: 'white',
-        padding: '5px 12px',
-        fontSize: 9, fontWeight: 700, letterSpacing: '.18em',
-        textTransform: 'uppercase',
-        opacity: 0,
-        transition: 'opacity .3s ease',
-        zIndex: 3, pointerEvents: 'none',
-        whiteSpace: 'nowrap'
-      }}></div>
+      })}
     </div>);
 
 };
@@ -1468,23 +1278,15 @@ const Reel = () =>
         <SectionTitle
         eyebrow="In motion"
         title={<>Watch the <span style={{ color: '#2F7BFF' }}>shine.</span></>}
-        subtitle="Real jobs, real cars, real results — the clips play as you scroll. Tap the speaker for sound."
+        subtitle="Real jobs, real cars, real results. Open any clip to play it full — use the speaker for sound."
         light
         align="center" />
       
       </Reveal>
 
-      <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(4, 1fr)',
-      gap: 16, maxWidth: 1300, margin: '0 auto'
-    }} className="reel-grid">
-        {reelClips.map((clip, i) =>
-      <Reveal key={clip.src} delay={i * 0.06}>
-            <ReelCard clip={clip} index={i} />
-          </Reveal>
-      )}
-      </div>
+      <Reveal>
+        <ReelPanels />
+      </Reveal>
 
       <Reveal delay={0.4}>
         <div style={{ textAlign: 'center', marginTop: 48 }}>
@@ -1495,17 +1297,44 @@ const Reel = () =>
       </Reveal>
     </div>
     <style>{`
-      /* 4 per row, with 5–7 centered in second row (4 + 3 layout) */
-      .reel-grid > *:nth-child(5) { grid-column-start: 1; }
-      @media (max-width: 1100px) {
-        .reel-grid { grid-template-columns: repeat(3, 1fr) !important; max-width: 900px !important; }
-        .reel-grid > *:nth-child(5) { grid-column-start: auto !important; }
-      }
-      @media (max-width: 800px) {
-        .reel-grid { grid-template-columns: 1fr 1fr !important; max-width: 600px !important; }
-      }
-      @media (max-width: 500px) {
-        .reel-grid { grid-template-columns: 1fr !important; max-width: 320px !important; }
+      .reel-acc { display: flex; gap: 12px; height: 540px; max-width: 1300px; margin: 0 auto; }
+      .reel-panel { position: relative; overflow: hidden; border-radius: 20px; cursor: pointer; min-width: 0;
+        background: #0B1A2E; border: 1px solid rgba(255,255,255,.08);
+        transition: flex .55s cubic-bezier(.4,0,.2,1); }
+      .reel-panel-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      .reel-panel-shade { position: absolute; inset: 0; z-index: 1;
+        background: linear-gradient(180deg, rgba(11,26,46,.55) 0%, rgba(11,26,46,.12) 42%, rgba(11,26,46,.88) 100%);
+        transition: background .4s ease; }
+      .reel-panel.on .reel-panel-shade { background: linear-gradient(180deg, rgba(11,26,46,.22) 0%, rgba(11,26,46,.04) 45%, rgba(11,26,46,.8) 100%); }
+      .reel-panel-collapsed { position: absolute; inset: 0; z-index: 2;
+        display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+        padding: 24px 8px; opacity: 1; transition: opacity .3s ease; }
+      .reel-panel.on .reel-panel-collapsed { opacity: 0; pointer-events: none; }
+      .reel-panel-tag { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 13px;
+        letter-spacing: .12em; text-transform: uppercase; color: #fff; text-align: center; white-space: nowrap;
+        text-shadow: 0 2px 10px rgba(0,0,0,.55); }
+      .reel-panel-plus { width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.55);
+        color: #fff; display: grid; place-items: center;
+        transition: background .25s ease, border-color .25s ease, transform .3s ease; }
+      .reel-panel:hover .reel-panel-plus { background: #2F7BFF; border-color: #2F7BFF; transform: rotate(90deg); }
+      .reel-panel-open { position: absolute; left: 26px; bottom: 26px; z-index: 2;
+        opacity: 0; transform: translateY(10px); transition: opacity .45s ease .1s, transform .45s ease .1s; }
+      .reel-panel.on .reel-panel-open { opacity: 1; transform: translateY(0); }
+      .reel-panel-eyebrow { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 11px;
+        letter-spacing: .18em; text-transform: uppercase; color: #5C8CE0; margin-bottom: 6px; }
+      .reel-panel-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 26px;
+        letter-spacing: -.01em; color: #2F7BFF; text-shadow: 0 2px 16px rgba(0,0,0,.55); }
+      .reel-panel-sound { position: absolute; top: 18px; right: 18px; z-index: 3; width: 40px; height: 40px;
+        border-radius: 50%; background: rgba(11,26,46,.55); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,.2); color: #fff; display: grid; place-items: center; cursor: pointer; }
+      @media (max-width: 820px) {
+        .reel-acc { flex-direction: column; height: 620px; }
+        .reel-panel.on { min-height: 240px; }
+        .reel-panel-collapsed { flex-direction: row; align-items: center; justify-content: space-between; padding: 0 18px; }
+        .reel-panel-tag { font-size: 12px; }
+        .reel-panel-plus { width: 34px; height: 34px; }
+        .reel-panel-open { left: 20px; bottom: 20px; }
+        .reel-panel-title { font-size: 22px; }
       }
     `}</style>
   </section>;
@@ -2292,6 +2121,25 @@ const AddressField = ({ value, onChange, onSelect }) => {
     </div>);
 };
 
+// "How did you hear about us?" — logo buttons that double as the lead's channel (feeds the dashboard).
+const HEARD_OPTIONS = [
+{ key: 'facebook', label: 'Facebook', logo:
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="#1877F2" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.96H15.8c-1.49 0-1.95.93-1.95 1.87v2.25h3.32l-.53 3.49h-2.79V24C19.61 23.1 24 18.1 24 12.07z" /></svg> },
+{ key: 'instagram', label: 'Instagram', logo:
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><defs><linearGradient id="aqig" x1="0" y1="24" x2="24" y2="0"><stop offset="0" stopColor="#FEDA75" /><stop offset=".35" stopColor="#FA7E1E" /><stop offset=".6" stopColor="#D62976" /><stop offset="1" stopColor="#4F5BD5" /></linearGradient></defs><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="url(#aqig)" /><circle cx="12" cy="12" r="4.6" fill="none" stroke="#fff" strokeWidth="2" /><circle cx="17.6" cy="6.4" r="1.3" fill="#fff" /></svg> },
+{ key: 'google', label: 'Google', logo:
+  <svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.47a5.53 5.53 0 0 1-2.4 3.58v3h3.87c2.26-2.09 3.56-5.17 3.56-8.82z" /><path fill="#34A853" d="M12 24c3.24 0 5.96-1.08 7.94-2.91l-3.87-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09A12 12 0 0 0 12 24z" /><path fill="#FBBC05" d="M5.27 14.29a7.2 7.2 0 0 1 0-4.58V6.62H1.29a12 12 0 0 0 0 10.76l3.98-3.09z" /><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.69 1.29 6.62l3.98 3.09C6.22 6.86 8.87 4.75 12 4.75z" /></svg> },
+{ key: 'qr', label: 'QR / Flyer', logo:
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M3 3h7v7H3V3zm2 2v3h3V5H5zm9-2h7v7h-7V3zm2 2v3h3V5h-3zM3 14h7v7H3v-7zm2 2v3h3v-3H5zm9-2h3v3h-3v-3zm5 0h2v2h-2v-2zm-5 5h3v2h-3v-2zm5 0h2v2h-2v-2z" /></svg> },
+{ key: 'referral', label: 'Friend / Referral', logo:
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" /></svg> },
+{ key: 'phone', label: 'Phone / Returning', logo:
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.28-.28.67-.36 1.02-.25 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.61 21 3 13.39 3 4c0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" /></svg> },
+{ key: 'other', label: 'Other', logo:
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg> }];
+
+const HEARD_LABELS = HEARD_OPTIONS.reduce((m, o) => {m[o.key] = o.label;return m;}, {});
+
 const QuoteForm = ({ onBook }) => {
   const [step, setStep] = React.useState(0);
   const [data, setData] = React.useState({
@@ -2376,13 +2224,18 @@ const QuoteForm = ({ onBook }) => {
   const conditionText = () =>
   data.dirt + '/10 (' + dirtLabel(data.dirt) + ')' + (data.petHair === 'Yes' ? ' + pet hair' : '');
 
-  // Self-reported acquisition channel. "Other" keeps the free-text detail (same convention as serviceList).
+  // Self-reported acquisition channel. "other" keeps the free-text detail (same convention as serviceList).
   const heardAboutValue = () => {
-    if (data.heardAbout === 'Other') {
+    if (!data.heardAbout) return '';
+    if (data.heardAbout === 'other') {
       return data.heardAboutOther.trim() ? 'Other: ' + data.heardAboutOther.trim() : 'Other';
     }
-    return data.heardAbout;
+    return HEARD_LABELS[data.heardAbout] || data.heardAbout;
   };
+  // The button they pick doubles as the lead's channel (feeds the dashboard "Leads by channel").
+  const heardAboutChannel = () => (data.heardAbout && data.heardAbout !== 'other') ? data.heardAbout : '';
+  // An explicit ?src= tag wins; otherwise the lead's channel is what they told us in the form.
+  const effectiveSource = () => (LEAD_SOURCE !== 'web' ? LEAD_SOURCE : (heardAboutChannel() || 'web'));
 
   const leadFields = () => {
     const fields = {
@@ -2397,7 +2250,7 @@ const QuoteForm = ({ onBook }) => {
       Location: data.area,
       'Requested time': (data.apptDate || 'Any day') + (data.apptTime ? ' · ' + data.apptTime : '') + ' (to confirm)',
       'Heard about us': heardAboutValue() || 'Not specified',
-      Source: LEAD_SOURCE
+      Source: effectiveSource()
     };
     if (data.email.trim()) {
       fields.email = data.email.trim(); // reply-to for the lead email
@@ -2436,7 +2289,7 @@ const QuoteForm = ({ onBook }) => {
         time_slot: data.apptTime || null,
         heard_about: heardAboutValue() || null,
         photos: photoUrls,
-        source: LEAD_SOURCE
+        source: effectiveSource()
       });
       return { ok: !ins.error, photoUrls };
     } catch (err) {
@@ -2595,6 +2448,16 @@ const QuoteForm = ({ onBook }) => {
       background-repeat: no-repeat; background-position: right 14px center;
     }
     .qw-select:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 4px rgba(30,91,198,.12); }
+    .heard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .heard-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px;
+      padding: 12px 6px; border: 1.5px solid #E1E7F0; border-radius: 12px; background: #fff; cursor: pointer;
+      font-family: inherit; transition: border-color .15s ease, box-shadow .15s ease, transform .12s ease; }
+    .heard-btn:hover { border-color: #1E5BC6; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(11,26,46,.06); }
+    .heard-btn.on { border-color: #1E5BC6; background: rgba(30,91,198,.06); box-shadow: 0 0 0 3px rgba(30,91,198,.12); }
+    .heard-logo { display: grid; place-items: center; height: 24px; color: #5B6B82; }
+    .heard-btn.on .heard-logo { color: #1E5BC6; }
+    .heard-label { font-size: 12px; font-weight: 600; color: #3B4C63; text-align: center; line-height: 1.15; }
+    @media (max-width: 440px) { .heard-grid { grid-template-columns: repeat(2, 1fr); } }
     .qw-photozones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .qw-zone-label { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #5B6B82; margin-bottom: 6px; }
     .qw-zone {
@@ -2760,21 +2623,21 @@ const QuoteForm = ({ onBook }) => {
               </div>
               <div className="field">
                 <label>How did you hear about us? <span style={{ fontWeight: 500, color: '#9AA8BC' }}>· optional</span></label>
-                <select className="qw-select" value={data.heardAbout} onChange={(e) => set('heardAbout', e.target.value)}>
-                  <option value="">Select one…</option>
-                  <option>Facebook / Instagram</option>
-                  <option>Google / Website</option>
-                  <option>QR code / Flyer / Yard sign</option>
-                  <option>Referral / Friend or neighbor</option>
-                  <option>Phone call / Returning customer</option>
-                  <option value="Other">Other (please specify)</option>
-                </select>
-                {data.heardAbout === 'Other' &&
+                <div className="heard-grid">
+                  {HEARD_OPTIONS.map((o) =>
+                  <button type="button" key={o.key}
+                  className={'heard-btn' + (data.heardAbout === o.key ? ' on' : '')}
+                  onClick={() => set('heardAbout', data.heardAbout === o.key ? '' : o.key)}>
+                      <span className="heard-logo">{o.logo}</span>
+                      <span className="heard-label">{o.label}</span>
+                    </button>)}
+                </div>
+                {data.heardAbout === 'other' &&
                 <input type="text" value={data.heardAboutOther}
                 onChange={(e) => set('heardAboutOther', e.target.value)}
                 placeholder="Tell us how you found us"
                 maxLength={120}
-                style={{ marginTop: 8 }} />}
+                style={{ marginTop: 10 }} />}
               </div>
             </div>
 
@@ -2919,11 +2782,6 @@ const Outro = ({ onBook }) => {
       <div style={{
         position: 'absolute', inset: 0, zIndex: 1,
         background: 'linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,.15) 40%, rgba(0,0,0,.55) 100%)'
-      }}></div>
-      {/* Vignette */}
-      <div style={{
-        position: 'absolute', inset: 0, zIndex: 1,
-        background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,.45) 100%)'
       }}></div>
 
       {/* Motion-blur speed lines (scale with progress) */}
