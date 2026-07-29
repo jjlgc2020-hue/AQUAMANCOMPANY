@@ -217,4 +217,49 @@ const SectionTitle = ({ eyebrow, title, subtitle, light, align = 'left' }) => (
   </div>
 );
 
-Object.assign(window, { Logo, Icon, HexIcon, Reveal, SectionTitle });
+/* Official brand marks, drawn in each network's own colours.
+   These are the real logos — unlike Icon.*, they do not take currentColor. */
+const Brand = {
+  Instagram: ({ size = 22 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      <defs>
+        <radialGradient id="igGrad" cx="30%" cy="107%" r="150%">
+          <stop offset="0%" stopColor="#FDD879" />
+          <stop offset="12%" stopColor="#FDD879" />
+          <stop offset="30%" stopColor="#FA7E1E" />
+          <stop offset="52%" stopColor="#D62976" />
+          <stop offset="74%" stopColor="#962FBF" />
+          <stop offset="100%" stopColor="#4F5BD5" />
+        </radialGradient>
+      </defs>
+      <rect width="24" height="24" rx="6.5" fill="url(#igGrad)" />
+      <path fill="#fff" d="M12 6.87c1.67 0 1.87.01 2.53.04.61.03.94.13 1.16.22.29.11.5.25.72.47.22.22.36.43.47.72.09.22.19.55.22 1.16.03.66.04.86.04 2.53s-.01 1.87-.04 2.53c-.3.61-.13.94-.22 1.16-.11.29-.25.5-.47.72-.22.22-.43.36-.72.47-.22.09-.55.19-1.16.22-.66.03-.86.04-2.53.04s-1.87-.01-2.53-.04c-.61-.03-.94-.13-1.16-.22a1.94 1.94 0 01-.72-.47 1.94 1.94 0 01-.47-.72c-.09-.22-.19-.55-.22-1.16-.03-.66-.04-.86-.04-2.53s.01-1.87.04-2.53c.03-.61.13-.94.22-1.16.11-.29.25-.5.47-.72.22-.22.43-.36.72-.47.22-.09.55-.19 1.16-.22.66-.03.86-.04 2.53-.04M12 5.75c-1.7 0-1.91.01-2.58.04-.67.03-1.12.14-1.52.29-.41.16-.76.37-1.11.72-.35.35-.56.7-.72 1.11-.15.4-.26.85-.29 1.52-.3.67-.04.88-.04 2.58s.01 1.91.04 2.58c.3.67.14 1.12.29 1.52.16.41.37.76.72 1.11.35.35.7.56 1.11.72.4.15.85.26 1.52.29.67.03.88.04 2.58.04s1.91-.01 2.58-.04c.67-.03 1.12-.14 1.52-.29.41-.16.76-.37 1.11-.72.35-.35.56-.7.72-1.11.15-.4.26-.85.29-1.52.03-.67.04-.88.04-2.58s-.01-1.91-.04-2.58c-.03-.67-.14-1.12-.29-1.52a3.06 3.06 0 00-.72-1.11 3.06 3.06 0 00-1.11-.72c-.4-.15-.85-.26-1.52-.29-.67-.03-.88-.04-2.58-.04z" />
+      <path fill="#fff" d="M12 8.78a3.22 3.22 0 100 6.44 3.22 3.22 0 000-6.44zm0 5.31a2.09 2.09 0 110-4.18 2.09 2.09 0 010 4.18z" />
+      <circle cx="15.34" cy="8.66" r=".75" fill="#fff" />
+    </svg>
+  ),
+  Facebook: ({ size = 22 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="12" fill="#1877F2" />
+      <path fill="#fff" d="M16.02 15.47l.53-3.47h-3.33V9.75c0-.95.47-1.88 1.96-1.88h1.51V4.92s-1.37-.23-2.68-.23c-2.74 0-4.52 1.66-4.52 4.66V12H6.43v3.47h3.06v8.39a12.2 12.2 0 003.73 0v-8.39h2.8z" />
+    </svg>
+  ),
+  Gmail: ({ size = 22 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 18" aria-hidden="true">
+      <path fill="#4285F4" d="M1.64 18h3.27v-7.95L.5 6.73v9.63C.5 17.27 1.01 18 1.64 18z" />
+      <path fill="#34A853" d="M19.09 18h3.27c.63 0 1.14-.73 1.14-1.64V6.73l-4.41 3.32V18z" />
+      <path fill="#FBBC04" d="M19.09 1.64v8.41l4.41-3.32V2.36c0-2.02-2.31-3.18-3.93-1.96l-.48.36z" />
+      <path fill="#EA4335" d="M4.91 10.05V1.64L12 6.95l7.09-5.31v8.41L12 15.36z" />
+      <path fill="#C5221F" d="M.5 2.36v4.37l4.41 3.32V1.64l-.48-.36C2.81-.82.5.34.5 2.36z" />
+    </svg>
+  ),
+  /* Not a network — a phone is a phone. Kept in the same visual family. */
+  Phone: ({ size = 22 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      <rect width="24" height="24" rx="6.5" fill="#22C55E" />
+      <path fill="#fff" d="M8.2 6.2h2.3l1.3 3.2-1.6 1c.7 1.6 1.8 2.7 3.4 3.4l1-1.6 3.2 1.3v2.3c0 .4-.3.7-.7.7-5.5 0-10.6-5.1-10.6-10.6 0-.4.3-.7.7-.7z" />
+    </svg>
+  )
+};
+
+Object.assign(window, { Logo, Icon, Brand, HexIcon, Reveal, SectionTitle });

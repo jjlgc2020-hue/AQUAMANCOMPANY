@@ -1,4 +1,4 @@
-// Aquaman page sections — Hero, Services, Process, Gallery, Testimonials, Stats, Contact, Footer
+// Aquaman page sections — Hero, Services, Process, Enhancements, Reel, Stats, Reviews, Contact, Footer
 
 const PHONE = '(901) 340-9733';
 const PHONE_HREF = 'tel:+19013409733';
@@ -1462,37 +1462,6 @@ const BeforeAfter = ({ label, before, after }) => {
 
 };
 
-const Gallery = () =>
-<section id="gallery" style={{ padding: '80px 0', background: 'var(--paper-2)' }}>
-    <div className="container">
-      <Reveal>
-        <div style={{
-        position: 'relative', overflow: 'hidden',
-        borderRadius: 4, aspectRatio: '21/9', minHeight: 260
-      }}>
-          <video src="home-comfort.mp4" autoPlay muted loop playsInline style={{
-          position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover'
-        }} />
-          <div style={{
-          position: 'absolute', inset: 0,
-          background: 'linear-gradient(90deg, rgba(11,26,46,.85) 0%, rgba(11,26,46,.5) 55%, rgba(11,26,46,.15) 100%)'
-        }} />
-          <div style={{
-          position: 'absolute', left: 'clamp(20px, 5%, 48px)', top: '50%',
-          transform: 'translateY(-50%)', color: 'white', maxWidth: 480
-        }}>
-            <div className="eyebrow" style={{ color: '#5C8CE0', marginBottom: 8 }}>We come to you</div>
-            <h3 className="display" style={{ fontSize: 'clamp(24px, 3.4vw, 40px)', margin: '0 0 10px', color: 'white' }}>
-              From the comfort of your home.
-            </h3>
-            <p style={{ margin: 0, fontSize: 15, color: 'rgba(255,255,255,.85)' }}>
-              You hand us the keys. We handle the rest — right in your driveway.
-            </p>
-          </div>
-        </div>
-      </Reveal>
-    </div>
-  </section>;
 
 
 /* ─────────── SOCIAL ─────────── */
@@ -1674,9 +1643,18 @@ const Reviews = () =>
 
 
 /* ─────────── CONTACT ─────────── */
+
+/* Every way to reach us, in the order people actually use them. */
+const CHANNELS = [
+{ label: 'Call or text', value: PHONE, href: PHONE_HREF, logo: <Brand.Phone /> },
+{ label: 'Follow & DM', value: IG, href: IG_HREF, ext: true, logo: <Brand.Instagram /> },
+{ label: 'On Facebook', value: FB, href: FB_HREF, ext: true, logo: <Brand.Facebook /> },
+{ label: 'Email us', value: EMAIL, href: EMAIL_HREF, logo: <Brand.Gmail />, tight: true }];
+
+
 const Contact = ({ onBook }) =>
 <section id="contact" style={{
-  padding: '120px 0',
+  padding: '120px 0 0',
   background: 'linear-gradient(135deg, #0B1A2E 0%, #0F2540 100%)',
   color: 'white', position: 'relative', overflow: 'hidden'
 }}>
@@ -1689,150 +1667,136 @@ const Contact = ({ onBook }) =>
   }}></div>
 
     <div className="container" style={{ position: 'relative' }}>
-      <div style={{
-      display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center'
-    }} className="contact-grid">
-        <Reveal>
-          <SectionTitle
-          eyebrow="Book your detail"
-          title={<>Text or call to book your detail <span style={{ color: '#2F7BFF' }}>today.</span></>}
-          subtitle="Same-week appointments available. Memphis metro and surrounding areas. We bring everything — you just hand us the keys."
-          light />
-        
+      <Reveal>
+        <SectionTitle
+        align="center"
+        eyebrow="Book your detail"
+        title={<>Text or call to book your detail <span style={{ color: '#2F7BFF' }}>today.</span></>}
+        subtitle="Same-week appointments available. Memphis metro and surrounding areas. We bring everything — you just hand us the keys."
+        light />
+      </Reveal>
 
-          <a href={PHONE_HREF} style={{
-          display: 'flex', alignItems: 'center', gap: 18,
-          padding: '22px 28px', background: 'rgba(255,255,255,.06)',
-          border: '1px solid rgba(255,255,255,.1)',
-          marginBottom: 16, transition: 'background .15s ease',
-          clipPath: 'polygon(0 0, calc(100% - 18px) 0, 100% 100%, 0 100%)'
-        }}
-        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,.1)'}
-        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,.06)'}>
-          
-            <div style={{
-            width: 56, height: 56, background: '#22C55E',
-            display: 'grid', placeItems: 'center', color: 'white',
-            clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)'
-          }}>
-              <Icon.Phone />
-            </div>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em',
-              color: '#5C8CE0', textTransform: 'uppercase', marginBottom: 4 }}>Call or text</div>
-              <div className="display" style={{ fontSize: 32, fontWeight: 900 }}>{PHONE}</div>
-            </div>
+      {/* Every channel in one horizontal band, the tiles sharing their edges */}
+      <Reveal delay={0.05}>
+        <div className="channel-row">
+          {CHANNELS.map((c) =>
+          <a
+            key={c.label}
+            href={c.href}
+            {...c.ext ? { target: '_blank', rel: 'noreferrer noopener' } : {}}
+            className="channel">
+            <span className="channel-logo">{c.logo}</span>
+            <span className="channel-text">
+              <span className="channel-label">{c.label}</span>
+              <span className={c.tight ? 'channel-value channel-value-sm' : 'channel-value'}>{c.value}</span>
+            </span>
           </a>
+          )}
+        </div>
+      </Reveal>
 
-          <a href={IG_HREF} target="_blank" rel="noreferrer" style={{
-          display: 'flex', alignItems: 'center', gap: 18,
-          padding: '22px 28px', background: 'rgba(255,255,255,.06)',
-          border: '1px solid rgba(255,255,255,.1)',
-          marginBottom: 16, transition: 'background .15s ease',
-          clipPath: 'polygon(0 0, calc(100% - 18px) 0, 100% 100%, 0 100%)'
-        }}
-        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,.1)'}
-        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,.06)'}>
-          
-            <div style={{
-            width: 56, height: 56,
-            background: 'linear-gradient(135deg, #833AB4 0%, #E1306C 50%, #FCB045 100%)',
-            display: 'grid', placeItems: 'center', color: 'white',
-            clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)'
-          }}>
-              <Icon.Instagram />
-            </div>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em',
-              color: '#5C8CE0', textTransform: 'uppercase', marginBottom: 4 }}>Follow & DM</div>
-              <div className="display" style={{ fontSize: 24, fontWeight: 900 }}>{IG}</div>
-            </div>
-          </a>
-
-          <a href={FB_HREF} target="_blank" rel="noreferrer" style={{
-          display: 'flex', alignItems: 'center', gap: 18,
-          padding: '22px 28px', background: 'rgba(255,255,255,.06)',
-          border: '1px solid rgba(255,255,255,.1)',
-          marginBottom: 16, transition: 'background .15s ease',
-          clipPath: 'polygon(0 0, calc(100% - 18px) 0, 100% 100%, 0 100%)'
-        }}
-        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,.1)'}
-        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,.06)'}>
-          
-            <div style={{
-            width: 56, height: 56, background: '#1877F2',
-            display: 'grid', placeItems: 'center', color: 'white',
-            clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)'
-          }}>
-              <Icon.Facebook />
-            </div>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em',
-              color: '#5C8CE0', textTransform: 'uppercase', marginBottom: 4 }}>Follow on Facebook</div>
-              <div className="display" style={{ fontSize: 24, fontWeight: 900 }}>{FB}</div>
-            </div>
-          </a>
-
-          <a href={EMAIL_HREF} style={{
-          display: 'flex', alignItems: 'center', gap: 18,
-          padding: '22px 28px', background: 'rgba(255,255,255,.06)',
-          border: '1px solid rgba(255,255,255,.1)',
-          transition: 'background .15s ease',
-          clipPath: 'polygon(0 0, calc(100% - 18px) 0, 100% 100%, 0 100%)'
-        }}
-        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,.1)'}
-        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,.06)'}>
-          
-            <div style={{
-            width: 56, height: 56, background: '#EA4335',
-            display: 'grid', placeItems: 'center', color: 'white',
-            clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)'
-          }}>
-              <Icon.Mail />
-            </div>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em',
-              color: '#5C8CE0', textTransform: 'uppercase', marginBottom: 4 }}>Email us</div>
-              <div style={{
-              fontFamily: 'Plus Jakarta Sans, sans-serif',
-              fontSize: 16, fontWeight: 700, letterSpacing: '-0.01em',
-              wordBreak: 'break-all'
-            }}>{EMAIL}</div>
-            </div>
-          </a>
-
-          <div style={{ marginTop: 32, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-            {[
+      {/* Hours moved out of the image, which now carries no type at all */}
+      <Reveal delay={0.08}>
+        <div className="contact-hours">
+          {[
           ['Mon–Sat', '8 AM – 7 PM'],
           ['Sunday', 'By appointment'],
           ['Service area', 'Memphis metro']].
           map(([k, v]) =>
           <div key={k}>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em',
-              color: '#5C8CE0', textTransform: 'uppercase', marginBottom: 4 }}>{k}</div>
-                <div style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 700, fontSize: 16 }}>{v}</div>
-              </div>
+              <div className="channel-label">{k}</div>
+              <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: 700, fontSize: 15, color: 'white' }}>{v}</div>
+            </div>
           )}
-          </div>
-        </Reveal>
+        </div>
+      </Reveal>
+    </div>
 
-        <Reveal delay={0.15}>
-          <div style={{
-          background: 'white', color: '#0B1A2E', padding: 'clamp(20px, 5vw, 36px)',
-          position: 'relative',
-          clipPath: 'polygon(0 0, calc(100% - 28px) 0, 100% 28px, 100% 100%, 28px 100%, 0 calc(100% - 28px))',
-          boxShadow: '0 30px 60px rgba(0,0,0,.4)'
-        }}>
-            <div className="eyebrow" style={{ marginBottom: 6 }}>Request a quote</div>
-            <h3 className="display" style={{ fontSize: 30, margin: '0 0 24px' }}>Get on the schedule.</h3>
-            <QuoteForm onBook={onBook} />
-          </div>
-        </Reveal>
+    {/* Full-bleed: photo and form meet edge to edge, no gutter between them */}
+    <div className="contact-split">
+      <div className="contact-visual">
+        <img src="carwash.jpg?v=2" alt="" />
+      </div>
+      <div className="contact-formwrap">
+        <div className="contact-formcard">
+          <div className="eyebrow" style={{ marginBottom: 6 }}>Request a quote</div>
+          <h3 className="display" style={{ fontSize: 30, margin: '0 0 24px' }}>Get on the schedule.</h3>
+          <QuoteForm onBook={onBook} />
+        </div>
       </div>
     </div>
+
     <style>{`
+      .channel-row {
+        display: grid; grid-template-columns: repeat(4, 1fr);
+        margin: -14px 0 28px;
+        border: 1px solid rgba(255,255,255,.12);
+        background: rgba(255,255,255,.05);
+      }
+      .channel {
+        display: flex; align-items: center; gap: 14px; min-width: 0;
+        padding: 18px 20px;
+        border-right: 1px solid rgba(255,255,255,.12);
+        transition: background .15s ease;
+      }
+      .channel:last-child { border-right: 0; }
+      .channel:hover { background: rgba(255,255,255,.09); }
+      .channel-logo { display: grid; place-items: center; flex-shrink: 0; }
+      .channel-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+      .channel-label {
+        font-size: 10px; font-weight: 700; letter-spacing: .16em;
+        color: #5C8CE0; text-transform: uppercase;
+      }
+      .channel-value {
+        font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800;
+        font-size: 17px; letter-spacing: -.02em; color: white;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      /* The email is the one value too long for a single line — wrap it rather
+         than ellipsize it, since a half-shown address is useless. */
+      .channel-value-sm {
+        font-size: 13px; font-weight: 700; letter-spacing: -.01em;
+        white-space: normal; overflow-wrap: anywhere; line-height: 1.3;
+      }
+
+      .contact-hours { display: flex; gap: 34px; flex-wrap: wrap; padding-bottom: 56px; }
+
+      .contact-split {
+        position: relative;
+        display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+        align-items: stretch;
+      }
+      .contact-visual { position: relative; overflow: hidden; min-height: 620px; }
+      .contact-visual img {
+        position: absolute; inset: 0;
+        width: 100%; height: 100%; object-fit: cover;
+        /* Anchored high: the panel is wider than the source is, so cover crops
+           vertically — at 42% his head fell outside the frame on a phone. */
+        object-position: 50% 12%;
+      }
+      .contact-formwrap {
+        background: white; color: #0B1A2E;
+        display: flex; align-items: center; justify-content: center;
+        padding: clamp(28px, 4vw, 64px);
+      }
+      .contact-formcard { width: 100%; max-width: 520px; }
+
+      @media (max-width: 1100px) {
+        .channel-row { grid-template-columns: repeat(2, 1fr); }
+        .channel:nth-child(2) { border-right: 0; }
+        .channel:nth-child(-n+2) { border-bottom: 1px solid rgba(255,255,255,.12); }
+      }
       @media (max-width: 900px) {
-        .contact-grid { grid-template-columns: 1fr !important; }
+        .contact-split { grid-template-columns: 1fr; }
+        /* Tall enough that the crop still contains the whole figure — most of
+           the traffic here is on a phone. */
+        .contact-visual { min-height: 420px; }
+      }
+      @media (max-width: 560px) {
+        .channel-row { grid-template-columns: 1fr; }
+        .channel { border-right: 0; border-bottom: 1px solid rgba(255,255,255,.12); }
+        .channel:last-child { border-bottom: 0; }
+        .contact-hours { gap: 22px; padding-bottom: 40px; }
       }
     `}</style>
   </section>;
@@ -2344,7 +2308,7 @@ const QuoteForm = ({ onBook }) => {
     .qw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .qw-tile {
       display: flex; align-items: center;
-      padding: 11px 12px; min-height: 42px;
+      padding: 11px 12px; min-height: 44px;   /* touch-target floor */
       border: 1px solid var(--line); background: var(--white);
       font-family: inherit; font-weight: 700; font-size: 13px; line-height: 1.2; color: var(--ink);
       text-align: left; cursor: pointer;
@@ -2991,7 +2955,7 @@ const Footer = () =>
 
 Object.assign(window, {
   Nav, Hero, Marquee, BrandsMarquee, Services, Process, Stats,
-  Gallery, Social, Reviews, Contact, Outro, Footer, services,
+  Social, Reviews, Contact, Outro, Footer, services,
   Enhancements, enhancements,
   Reel, reelClips,
   PHONE, PHONE_HREF, IG, IG_HREF, FB, FB_HREF
